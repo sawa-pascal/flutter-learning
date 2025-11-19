@@ -2,6 +2,8 @@ import 'package:flutter/material.dart'; // FlutterでUIを作るためのパッ�
 
 import 'test.dart';
 import 'http.dart';
+import 'login.dart';
+import 'cart.dart';
 
 // アプリの画面(UI) = MyHomePageウィジェット本体
 class MyHomePage extends StatefulWidget {
@@ -79,16 +81,24 @@ class _MyHomePageState extends State<MyHomePage> {
         leading: Icon(Icons.home),
         actions: [
           Icon(Icons.search),
-          Icon(Icons.add),
-          IconButton(
-            icon: Icon(Icons.text_snippet), // test.dart遷移用ボタン
+          TextButton(
             onPressed: () {
               Navigator.of(
                 context,
                 rootNavigator: true,
-              ).push(MaterialPageRoute(builder: (context) => Test()));
+              ).push(MaterialPageRoute(builder: (context) => Login()));
             },
-            tooltip: 'Testページへ',
+            child: Text('ログイン'),
+          ),
+          IconButton(
+            icon: Icon(Icons.shopping_cart),
+            onPressed: () {
+              Navigator.of(
+                context,
+                rootNavigator: true,
+              ).push(MaterialPageRoute(builder: (context) => Cart()));
+            },
+            tooltip: 'Cartページへ',
           ),
         ],
         elevation: 10,
