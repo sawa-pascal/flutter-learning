@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'myApiProvider.dart';
 
@@ -6,19 +5,21 @@ import 'myApiProvider.dart';
 class ItemList extends StatelessWidget {
   final List<dynamic> items;
 
-  const ItemList({
-    Key? key,
-    required this.items,
-  }) : super(key: key);
+  const ItemList({Key? key, required this.items}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     // ListView.separated で商品ごとの区切り線を表示
+    // 商品が1つもない場合は空状態を表示する（拡張性のため）
+    if (items.isEmpty) {
+      return const Center(child: Text('商品がありません'));
+    }
     return ListView.separated(
       physics: const AlwaysScrollableScrollPhysics(),
       itemCount: items.length,
       separatorBuilder: (_, __) => const SizedBox(height: 4), // 商品ごとの間隔
-      itemBuilder: (context, index) => ItemCard(item: items[index]), // 1商品につきItemCard表示
+      itemBuilder: (context, index) =>
+          ItemCard(item: items[index]), // 1商品につきItemCard表示
     );
   }
 }
@@ -27,10 +28,7 @@ class ItemList extends StatelessWidget {
 class ItemCard extends StatelessWidget {
   final dynamic item;
 
-  const ItemCard({
-    Key? key,
-    required this.item,
-  }) : super(key: key);
+  const ItemCard({Key? key, required this.item}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -43,25 +41,99 @@ class ItemCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       elevation: 3,
-      child: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 商品画像部分
-            ItemImage(imageUrl: imageUrl),
-            const SizedBox(width: 12),
-            // 商品の詳細情報
-            Expanded(
-              child: _ItemDetails(
-                name: name,
-                price: price,
-                description: description,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(4),
+        onTap: () => _showItemDetailDialog(context, name, imageUrl, price, description),
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // サムネイル画像
+              ItemImage(imageUrl: imageUrl),
+              const SizedBox(width: 12),
+              // 商品情報詳細
+              Expanded(
+                child: _ItemDetails(
+                  name: name,
+                  price: price,
+                  description: description,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  /// 商品拡大表示ダイアログを表示
+  void _showItemDetailDialog(BuildContext context, String name, String? imageUrl, String? price, String? description) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Material(
+                borderRadius: BorderRadius.circular(16),
+                clipBehavior: Clip.antiAlias,
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // 拡大画像
+                      if (imageUrl != null)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            imageUrl,
+                            fit: BoxFit.contain,
+                            height: 180,
+                            errorBuilder: (_, __, ___) => const Icon(Icons.image),
+                          ),
+                        ),
+                      const SizedBox(height: 16),
+                      // 商品名
+                      Text(
+                        name,
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      // 価格
+                      if (price != null)
+                        Text(
+                          price,
+                          style: const TextStyle(fontSize: 18, color: Colors.cyan, fontWeight: FontWeight.bold),
+                        ),
+                      const SizedBox(height: 14),
+                      // 商品説明
+                      if (description != null && description.trim().isNotEmpty)
+                        Text(
+                          description,
+                          style: const TextStyle(fontSize: 15, color: Colors.black87),
+                        ),
+                      const SizedBox(height: 20),
+                      // 閉じるボタン
+                      Align(
+                        alignment: Alignment.bottomRight,
+                        child: TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('閉じる'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -111,10 +183,7 @@ class _ItemDetails extends StatelessWidget {
         // 商品名
         Text(
           name,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         // 価格（存在する場合）
         if (price != null) ...[
@@ -142,10 +211,7 @@ class _ItemDetails extends StatelessWidget {
             description!,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.black87,
-            ),
+            style: const TextStyle(fontSize: 14, color: Colors.black87),
           ),
         ],
       ],
@@ -187,4 +253,3 @@ class ItemImage extends StatelessWidget {
     );
   }
 }
-
