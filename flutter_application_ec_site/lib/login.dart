@@ -31,10 +31,11 @@ class _LoginState extends State<Login> {
       setState(() {
         _isLoading = true;
       });
-      await _itemHttpClient.fetchLogin(
+      var user = await _itemHttpClient.fetchLogin(
         _emailController.text,
         _passwordController.text,
       );
+
       setState(() {
         _isLoading = false;
       });
