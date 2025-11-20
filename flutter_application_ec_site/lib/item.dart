@@ -204,6 +204,28 @@ class ItemCard extends StatelessWidget {
                           ),
                         ),
                       const SizedBox(height: 20),
+
+                      // カートへ追加ボタン
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            foregroundColor: Colors.white,
+                          ),
+                          icon: const Icon(Icons.shopping_cart_outlined),
+                          label: const Text('カートへ追加'),
+                          onPressed: () {
+                            // TODO: カート追加処理を実装
+                            Navigator.of(context).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('カートに追加しました')),
+                            );
+                          },
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
                       // 閉じるボタン
                       Align(
                         alignment: Alignment.bottomRight,
@@ -222,6 +244,7 @@ class ItemCard extends StatelessWidget {
       },
     );
   }
+
 
   /// 画像URL生成関数（APIからのパスとベースURLを連結）
   String? _extractImageUrl(dynamic item) {
