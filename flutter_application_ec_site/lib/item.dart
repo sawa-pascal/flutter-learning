@@ -33,9 +33,17 @@ class ItemList extends ConsumerWidget {
         });
 
         // 表示用: 各カテゴリーのセクション(header＋商品リスト)
-        return ListView.builder(
+        return ListView.separated(
           physics: const AlwaysScrollableScrollPhysics(),
           itemCount: sortedCategories.length,
+
+          separatorBuilder: (context, index) => const Divider(
+            height: 0,
+            thickness: 2,
+            indent: 0,
+            endIndent: 0,
+            color: Colors.grey,
+          ),
           itemBuilder: (context, catIndex) {
             final category = sortedCategories[catIndex];
             final categoryId = category['id'].toString();
@@ -51,13 +59,6 @@ class ItemList extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Divider(
-                    height: 0,
-                    thickness: 2,
-                    indent: 0,
-                    endIndent: 0,
-                    color: Colors.grey,
-                  ),
                   // カテゴリー名
                   Padding(
                     padding: const EdgeInsets.symmetric(
@@ -77,7 +78,7 @@ class ItemList extends ConsumerWidget {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: categoryItems.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 4),
+                    separatorBuilder: (context, index) => const SizedBox(height: 4),
                     itemBuilder: (context, index) =>
                         ItemCard(item: categoryItems[index]),
                   ),
