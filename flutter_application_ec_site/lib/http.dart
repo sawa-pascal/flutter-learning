@@ -29,6 +29,25 @@ class ItemHttpClient {
     }
   }
 
+  Future<List<dynamic>> fetchLogin(String email, String password) async {
+    try {
+      final response = await _client.get(
+        Uri.http(apiBaseUrl, '/api/get_user.php', {
+          'email': email,
+          'password': password,
+        }),
+      );
+      final jsonResponse = _processResponse(response);
+      return jsonResponse['user'] ?? [];
+    } on SocketException catch (e) {
+      throw Exception("ネットワークエラー: ${e.toString()}");
+    } on Exception catch (e) {
+      throw Exception("データ取得エラー: ${e.toString()}");
+    } catch (_) {
+      throw Exception("予期しないエラーが発生しました");
+    }
+  }
+
   /// サーバーのレスポンスを処理し、エラーなら例外を投げる
   dynamic _processResponse(http.Response response) {
     switch (response.statusCode) {
