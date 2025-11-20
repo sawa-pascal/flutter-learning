@@ -98,7 +98,7 @@ class _LoginState extends ConsumerState<Login> {
           return 'メールアドレスを入力してください';
         }
         // 簡易なメール形式チェック
-        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+        if (!RegExp(r'^[^@]+@[^@]+').hasMatch(value)) {
           return '有効なメールアドレスを入力してください';
         }
         return null;
