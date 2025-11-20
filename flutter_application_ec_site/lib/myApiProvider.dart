@@ -13,6 +13,28 @@ const String apiBaseUrl = '3.26.29.114';
 const String imageBaseUrl = 'http://3.26.29.114/images/';
 
 @riverpod
+Future<List<dynamic>> categories(Ref ref) async {
+  final client = http.Client();
+  try {
+    final response = await client.get(
+      Uri.http(apiBaseUrl, '/api/categories/get_categories_list.php'),
+    );
+    if (response.statusCode == 200) {
+      final jsonResponse = jsonDecode(response.body);
+      return jsonResponse['items'] ?? [];
+    } else {
+      throw Exception('サーバーエラー: ${response.statusCode}');
+    }
+  } on SocketException catch (e) {
+    throw Exception("ネットワークエラー: ${e.toString()}");
+  } on Exception catch (e) {
+    throw Exception("データ取得エラー: ${e.toString()}");
+  } finally {
+    client.close();
+  }
+}
+
+@riverpod
 Future<List<dynamic>> items(Ref ref) async {
   final client = http.Client();
   try {

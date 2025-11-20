@@ -1,25 +1,92 @@
 import 'package:flutter/material.dart';
 import 'myApiProvider.dart';
+// カテゴリー一覧取得用Provider
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// 商品リストを表示するウィジェット
-class ItemList extends StatelessWidget {
+class ItemList extends ConsumerWidget {
   final List<dynamic> items;
-
   const ItemList({Key? key, required this.items}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    // ListView.separated で商品ごとの区切り線を表示
-    // 商品が1つもない場合は空状態を表示する（拡張性のため）
-    if (items.isEmpty) {
-      return const Center(child: Text('商品がありません'));
-    }
-    return ListView.separated(
-      physics: const AlwaysScrollableScrollPhysics(),
-      itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 4), // 商品ごとの間隔
-      itemBuilder: (context, index) =>
-          ItemCard(item: items[index]), // 1商品につきItemCard表示
+  Widget build(BuildContext context, WidgetRef ref) {
+    final categoriesAsync = ref.watch(categoriesProvider);
+
+    // FutureBuilder的にAsyncValueを分岐して使う
+    return categoriesAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(child: Text('カテゴリー取得失敗: $error')),
+      data: (categories) {
+        // 商品をカテゴリーごとにグループ化: Map<category_id, List<item>>
+        final Map<String, List<dynamic>> itemsByCategory = {};
+        for (final item in items) {
+          final cid = item['category_id']?.toString() ?? '0';
+          itemsByCategory.putIfAbsent(cid, () => []).add(item);
+        }
+
+        // カテゴリーorder順でソートしたカテゴリーリスト
+        final sortedCategories = List<Map<String, dynamic>>.from(categories);
+        sortedCategories.sort((a, b) {
+          final ao = int.tryParse(a['order'].toString()) ?? 9999;
+          final bo = int.tryParse(b['order'].toString()) ?? 9999;
+          return ao.compareTo(bo);
+        });
+
+        // 表示用: 各カテゴリーのセクション(header＋商品リスト)
+        return ListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
+          itemCount: sortedCategories.length,
+          itemBuilder: (context, catIndex) {
+            final category = sortedCategories[catIndex];
+            final categoryId = category['id'].toString();
+            final categoryName = category['name']?.toString() ?? '未分類';
+            final categoryItems = itemsByCategory[categoryId] ?? [];
+
+            if (categoryItems.isEmpty) {
+              // このカテゴリに商品が無ければセクションをスキップ
+              return const SizedBox.shrink();
+            }
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Divider(
+                    height: 0,
+                    thickness: 2,
+                    indent: 0,
+                    endIndent: 0,
+                    color: Colors.grey,
+                  ),
+                  // カテゴリー名
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 12,
+                    ),
+                    child: Text(
+                      categoryName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Colors.blueGrey,
+                      ),
+                    ),
+                  ),
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: categoryItems.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 4),
+                    itemBuilder: (context, index) =>
+                        ItemCard(item: categoryItems[index]),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -43,7 +110,8 @@ class ItemCard extends StatelessWidget {
       elevation: 3,
       child: InkWell(
         borderRadius: BorderRadius.circular(4),
-        onTap: () => _showItemDetailDialog(context, name, imageUrl, price, description),
+        onTap: () =>
+            _showItemDetailDialog(context, name, imageUrl, price, description),
         child: Padding(
           padding: const EdgeInsets.all(10.0),
           child: Row(
@@ -68,7 +136,13 @@ class ItemCard extends StatelessWidget {
   }
 
   /// 商品拡大表示ダイアログを表示
-  void _showItemDetailDialog(BuildContext context, String name, String? imageUrl, String? price, String? description) {
+  void _showItemDetailDialog(
+    BuildContext context,
+    String name,
+    String? imageUrl,
+    String? price,
+    String? description,
+  ) {
     showDialog(
       context: context,
       builder: (context) {
@@ -94,28 +168,39 @@ class ItemCard extends StatelessWidget {
                             imageUrl,
                             fit: BoxFit.contain,
                             height: 180,
-                            errorBuilder: (_, __, ___) => const Icon(Icons.image),
+                            errorBuilder: (_, __, ___) =>
+                                const Icon(Icons.image),
                           ),
                         ),
                       const SizedBox(height: 16),
                       // 商品名
                       Text(
                         name,
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       // 価格
                       if (price != null)
                         Text(
                           price,
-                          style: const TextStyle(fontSize: 18, color: Colors.cyan, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: Colors.cyan,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       const SizedBox(height: 14),
                       // 商品説明
                       if (description != null && description.trim().isNotEmpty)
                         Text(
                           description,
-                          style: const TextStyle(fontSize: 15, color: Colors.black87),
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: Colors.black87,
+                          ),
                         ),
                       const SizedBox(height: 20),
                       // 閉じるボタン

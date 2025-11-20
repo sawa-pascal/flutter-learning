@@ -121,10 +121,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _UserModel():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -159,7 +156,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name,  String email,  String tel,  String hashed_hashed_password,  int prefecture_id,  String? address)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name,  String email,  String tel,  String hashed_password,  int prefecture_id,  String? address)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserModel() when $default != null:
 return $default(_that.id,_that.name,_that.email,_that.tel,_that.hashed_password,_that.prefecture_id,_that.address);case _:
@@ -183,10 +180,7 @@ return $default(_that.id,_that.name,_that.email,_that.tel,_that.hashed_password,
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name,  String email,  String tel,  String hashed_password,  int prefecture_id,  String? address)  $default,) {final _that = this;
 switch (_that) {
 case _UserModel():
-return $default(_that.id,_that.name,_that.email,_that.tel,_that.hashed_password,_that.prefecture_id,_that.address);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.id,_that.name,_that.email,_that.tel,_that.hashed_password,_that.prefecture_id,_that.address);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
