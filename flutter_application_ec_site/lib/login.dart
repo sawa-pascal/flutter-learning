@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'http.dart';
+import 'models/userModel/userModel.dart';
+import 'myApiProvider.dart';
 
-class Login extends StatefulWidget {
+class Login extends ConsumerStatefulWidget {
   const Login({super.key});
 
   @override
-  State<Login> createState() => _LoginState();
+  ConsumerState<Login> createState() => _LoginState();
 }
 
-class _LoginState extends State<Login> {
+class _LoginState extends ConsumerState<Login> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscureText = true;
   bool _isLoading = false;
-
-  // ItemHttpClientのインスタンス
-  final ItemHttpClient _itemHttpClient = ItemHttpClient();
 
   @override
   void dispose() {
@@ -31,19 +30,40 @@ class _LoginState extends State<Login> {
       setState(() {
         _isLoading = true;
       });
-      var user = await _itemHttpClient.fetchLogin(
-        _emailController.text,
-        _passwordController.text,
-      );
 
-      setState(() {
-        _isLoading = false;
-      });
-      // 成功時の処理（例: ホーム画面へ遷移）
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('ログイン成功')));
-      Navigator.pop(context);
+      try {
+        // myApiProvider.dartのlogin関数を呼ぶように修正
+        final userJson = await ref.read(loginProvider(
+          email: _emailController.text,
+          password: _passwordController.text,
+        ).future);
+
+        setState(() {
+          _isLoading = false;
+        });
+
+        // userJsonがnullもしくは空の場合に失敗、それ以外はUserModelに変換してProviderにセット
+        if (userJson != null && userJson is Map<String, dynamic> && userJson['id'] != null) {
+          final userModel = UserModel.fromJson(userJson);
+          ref.read(userModelProvider.notifier).state = userModel;
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('ログイン成功')));
+          Navigator.pop(context);
+        } else {
+          // ログイン失敗時
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('ログイン失敗')));
+        }
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('ログイン失敗: $e')));
+      }
     }
   }
 
