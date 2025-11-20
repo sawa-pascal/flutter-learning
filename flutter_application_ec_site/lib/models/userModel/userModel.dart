@@ -13,7 +13,7 @@ sealed class UserModel with _$UserModel {
     required String name,
     required String email,
     required String tel,
-    required String password,
+    required String hashed_password,
     required int prefecture_id,
     String? address,
     // 必要があれば他のフィールドも追加

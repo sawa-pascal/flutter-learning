@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'test.dart';
-import 'login.dart';
-import 'cart.dart';
 import 'myApiProvider.dart';
 import 'models/userModel/userModel.dart';
+import 'appBar.dart';
 
 class MyHomePage extends ConsumerWidget {
   const MyHomePage({Key? key, required this.title}) : super(key: key);
@@ -18,7 +17,7 @@ class MyHomePage extends ConsumerWidget {
     final userModel = ref.watch(userModelProvider);
 
     return Scaffold(
-      appBar: _buildAppBar(context, userModel),
+      appBar: buildAppBar(context, title, userModel),
       body: Column(
         children: [
           _UserInfoSection(userModel: userModel),
@@ -40,54 +39,6 @@ class MyHomePage extends ConsumerWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  AppBar _buildAppBar(BuildContext context, UserModel? userModel) {
-    return AppBar(
-      title: Text(
-        title,
-        style: const TextStyle(fontSize: 30, color: Colors.green),
-      ),
-      centerTitle: true,
-      leading: const Icon(Icons.home),
-      actions: [
-        const Icon(Icons.search),
-        userModel == null
-            ? TextButton(
-                onPressed: () => Navigator.of(
-                  context,
-                  rootNavigator: true,
-                ).push(MaterialPageRoute(builder: (context) => const Login())),
-                child: const Text('ログイン'),
-              )
-            : Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Center(
-                  child: Text(
-                    userModel.name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-        IconButton(
-          icon: const Icon(Icons.shopping_cart),
-          onPressed: () => Navigator.of(
-            context,
-            rootNavigator: true,
-          ).push(MaterialPageRoute(builder: (context) => const Cart())),
-          tooltip: 'Cartページへ',
-        ),
-      ],
-      elevation: 10,
-      backgroundColor: Colors.red,
-      flexibleSpace: Image.network(
-        'http://3.26.29.114/images/%E3%83%8E%E3%83%BC%E3%83%88/1129031014690ad52f20b671.42419074.png',
-        fit: BoxFit.contain,
       ),
     );
   }
