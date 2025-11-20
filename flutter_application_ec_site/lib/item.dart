@@ -100,11 +100,12 @@ class ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 画像URL、商品名、価格、説明を取り出す
+    // 画像URL、商品名、価格、説明、在庫数を取り出す
     final imageUrl = _extractImageUrl(item);
     final name = item['name']?.toString() ?? '名称不明';
     final price = _formatPrice(item['price']);
     final description = item['description']?.toString();
+    final stock = _formatStock(item['quantity']);
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
@@ -112,7 +113,7 @@ class ItemCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(4),
         onTap: () =>
-            _showItemDetailDialog(context, name, imageUrl, price, description),
+            _showItemDetailDialog(context, name, imageUrl, price, description, stock),
         child: Padding(
           padding: const EdgeInsets.all(10.0),
           child: Row(
@@ -127,6 +128,7 @@ class ItemCard extends StatelessWidget {
                   name: name,
                   price: price,
                   description: description,
+                  stock: stock,
                 ),
               ),
             ],
@@ -143,6 +145,7 @@ class ItemCard extends StatelessWidget {
     String? imageUrl,
     String? price,
     String? description,
+    String? stock,
   ) {
     showDialog(
       context: context,
@@ -193,7 +196,26 @@ class ItemCard extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                      const SizedBox(height: 14),
+                      // 在庫数
+                      if (stock != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6.0, bottom: 6.0),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.inventory_2, size: 18, color: Colors.grey),
+                              const SizedBox(width: 4),
+                              Text(
+                                stock,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      const SizedBox(height: 8),
                       // 商品説明
                       if (description != null && description.trim().isNotEmpty)
                         Text(
@@ -245,7 +267,6 @@ class ItemCard extends StatelessWidget {
     );
   }
 
-
   /// 画像URL生成関数（APIからのパスとベースURLを連結）
   String? _extractImageUrl(dynamic item) {
     final url = item['image_url'];
@@ -269,19 +290,37 @@ class ItemCard extends StatelessWidget {
     // パースできなかった場合はそのまま表示
     return '¥$price';
   }
+
+  /// 在庫数をフォーマットする（在庫数：5 など）
+  String? _formatStock(dynamic stock) {
+    if (stock == null) return null;
+    int? stockInt;
+    if (stock is int) {
+      stockInt = stock;
+    } else if (stock is String) {
+      stockInt = int.tryParse(stock);
+    }
+    if (stockInt != null) {
+      return '在庫数: $stockInt';
+    }
+    // パースできなかった場合はそのまま表示
+    return '在庫数: $stock';
+  }
 }
 
-/// 商品詳細（名前・値段・説明文）部分ウィジェット
+/// 商品詳細（名前・値段・説明文、在庫数）部分ウィジェット
 class _ItemDetails extends StatelessWidget {
   final String name;
   final String? price;
   final String? description;
+  final String? stock;
 
   const _ItemDetails({
     Key? key,
     required this.name,
     this.price,
     this.description,
+    this.stock,
   }) : super(key: key);
 
   @override
@@ -311,6 +350,20 @@ class _ItemDetails extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ],
+        // 在庫数（存在する場合）
+        if (stock != null) ...[
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Icon(Icons.inventory_2, size: 16, color: Colors.grey),
+              const SizedBox(width: 4),
+              Text(
+                stock!,
+                style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.bold),
+              ),
+            ],
           ),
         ],
         // 説明文（空でない場合）
