@@ -3,6 +3,9 @@ import 'myApiProvider.dart';
 // カテゴリー一覧取得用Provider
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+// カートモデル等をインポート
+import 'models/cartItemModel/cartItemModel.dart';
+
 /// 商品リストを表示するウィジェット
 class ItemList extends ConsumerWidget {
   final List<dynamic> items;
@@ -36,7 +39,6 @@ class ItemList extends ConsumerWidget {
         return ListView.separated(
           physics: const AlwaysScrollableScrollPhysics(),
           itemCount: sortedCategories.length,
-
           separatorBuilder: (context, index) => const Divider(
             height: 0,
             thickness: 2,
@@ -93,13 +95,13 @@ class ItemList extends ConsumerWidget {
 }
 
 /// 商品1件の情報カード
-class ItemCard extends StatelessWidget {
+class ItemCard extends ConsumerWidget {
   final dynamic item;
 
   const ItemCard({Key? key, required this.item}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // 画像URL、商品名、価格、説明、在庫数を取り出す
     final imageUrl = _extractImageUrl(item);
     final name = item['name']?.toString() ?? '名称不明';
@@ -113,7 +115,7 @@ class ItemCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(4),
         onTap: () =>
-            _showItemDetailDialog(context, name, imageUrl, price, description, stock),
+            _showItemDetailDialog(context, ref, item, name, imageUrl, price, description, stock),
         child: Padding(
           padding: const EdgeInsets.all(10.0),
           child: Row(
@@ -141,6 +143,8 @@ class ItemCard extends StatelessWidget {
   /// 商品拡大表示ダイアログを表示
   void _showItemDetailDialog(
     BuildContext context,
+    WidgetRef ref,
+    dynamic item,
     String name,
     String? imageUrl,
     String? price,
@@ -230,23 +234,60 @@ class ItemCard extends StatelessWidget {
                       // カートへ追加ボタン
                       Align(
                         alignment: Alignment.centerRight,
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            foregroundColor: Colors.white,
-                          ),
-                          icon: const Icon(Icons.shopping_cart_outlined),
-                          label: const Text('カートへ追加'),
-                          onPressed: () {
-                            // TODO: カート追加処理を実装
-                            Navigator.of(context).pop();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('カートに追加しました')),
+                        child: Consumer(
+                          builder: (context, ref, _) {
+                            return ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.orange,
+                                foregroundColor: Colors.white,
+                              ),
+                              icon: const Icon(Icons.shopping_cart_outlined),
+                              label: const Text('カートへ追加'),
+                              onPressed: () {
+                                // ここでcartItemsProviderへ追加
+                                final cartItem = CartItemModel(
+                                  id: item['id'] is int
+                                      ? item['id']
+                                      : int.tryParse(item['id'].toString()) ?? 0,
+                                  name: item['name'] ?? "",
+                                  price: item['price'] is int
+                                      ? item['price']
+                                      : int.tryParse(item['price'].toString()) ?? 0,
+                                  stock: item['quantity'] is int
+                                      ? item['quantity']
+                                      : int.tryParse(item['quantity'].toString()) ?? 0,
+                                  quantity: 1,
+                                  image_url: item['image_url']?.toString() ?? "",
+                                );
+
+                                final cartItems = ref.read(cartItemsProvider);
+
+                                // 既に同じidの商品があればquantityだけ増やす
+                                final existingIndex = cartItems.indexWhere((ci) => ci.id == cartItem.id);
+                                if (existingIndex != -1) {
+                                  final updatedCartItems = [...cartItems];
+                                  final existingItem = updatedCartItems[existingIndex];
+                                  updatedCartItems[existingIndex] = existingItem.copyWith(
+                                    quantity: existingItem.quantity + 1,
+                                  );
+                                  ref.read(cartItemsProvider.notifier).state = updatedCartItems;
+                                } else {
+                                  ref.read(cartItemsProvider.notifier).state = [
+                                    ...cartItems,
+                                    cartItem,
+                                  ];
+                                }
+
+                                Navigator.of(context).pop();
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('カートに追加しました')),
+                                );
+                              },
                             );
                           },
                         ),
                       ),
-
                       const SizedBox(height: 8),
                       // 閉じるボタン
                       Align(
