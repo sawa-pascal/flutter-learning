@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'cart.dart';
 import 'myApiProvider.dart';
 import 'models/userModel/userModel.dart';
 import 'appBar.dart';
@@ -31,16 +32,28 @@ class MyHomePage extends ConsumerWidget {
           // ユーザー情報セクション（ログイン時は情報表示、未ログイン時は空白）
           UserInfoSection(userModel: userModel),
           // 商品リストやローディング・エラー表示部
-          Expanded(
-            child: _buildItemsSection(ref, itemsAsync),
-          ),
+          Expanded(child: _buildItemsSection(ref, itemsAsync)),
         ],
+      ),
+
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (context) => const Cart()));
+        },
+        backgroundColor: Colors.orange,
+        child: const Icon(Icons.shopping_cart, color: Colors.white),
+        tooltip: 'カートを見る',
       ),
     );
   }
 
   /// 商品リスト部分（ローディング・エラー・データを状態で切り替え）
-  Widget _buildItemsSection(WidgetRef ref, AsyncValue<List<dynamic>> itemsAsync) {
+  Widget _buildItemsSection(
+    WidgetRef ref,
+    AsyncValue<List<dynamic>> itemsAsync,
+  ) {
     return itemsAsync.when(
       // ローディング中：インジケータ表示
       loading: () => const Center(child: CircularProgressIndicator()),
