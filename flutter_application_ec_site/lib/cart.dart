@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_ec_site/models/cartItemModel/cartItemModel.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:hooks_riverpod/legacy.dart';
 import 'login.dart';
 import 'myApiProvider.dart';
 import 'purchase.dart';
@@ -11,10 +12,236 @@ class Cart extends ConsumerStatefulWidget {
   const Cart({super.key});
 
   @override
-  ConsumerState<Cart> createState() => CartState();
+  ConsumerState<Cart> createState() => _CartState();
 }
 
-class CartState extends ConsumerState<Cart> {
+class _CartState extends ConsumerState<Cart> {
+  void _changeQuantity({
+    required CartItemModel item,
+    required int delta,
+    required StateController<List<CartItemModel>> cartItemsNotifier,
+  }) {
+    cartItemsNotifier.state = [
+      for (final cartItem in cartItemsNotifier.state)
+        if (cartItem.id == item.id)
+          cartItem.copyWith(
+            quantity: (cartItem.quantity + delta)
+                .clamp(1, cartItem.stock),
+          )
+        else
+          cartItem,
+    ];
+  }
+
+  void _deleteCartItem(
+    CartItemModel item,
+    StateController<List<CartItemModel>> cartItemsNotifier,
+  ) {
+    cartItemsNotifier.state = [
+      for (final cartItem in cartItemsNotifier.state)
+        if (cartItem.id != item.id) cartItem,
+    ];
+  }
+
+  Widget _buildQuantityControls(
+      BuildContext context,
+      CartItemModel item,
+      StateController<List<CartItemModel>> cartItemsNotifier,
+      ) {
+    return Row(
+      children: [
+        const Text('選択数: '),
+        GestureDetector(
+          onLongPressStart: item.quantity > 1
+              ? (_) {
+                  startLongPressRepeater(() {
+                    if (item.quantity > 1) {
+                      _changeQuantity(
+                          item: item,
+                          delta: -1,
+                          cartItemsNotifier: cartItemsNotifier);
+                    }
+                  });
+                }
+              : null,
+          onLongPressEnd: (_) => stopLongPressRepeater(),
+          child: IconButton(
+            icon: const Icon(Icons.remove_circle_outline),
+            onPressed: item.quantity > 1
+                ? () {
+                    _changeQuantity(
+                        item: item,
+                        delta: -1,
+                        cartItemsNotifier: cartItemsNotifier);
+                  }
+                : null,
+          ),
+        ),
+        Text(
+          '${item.quantity}',
+          style: const TextStyle(fontSize: 16),
+        ),
+        GestureDetector(
+          onLongPressStart: item.quantity < item.stock
+              ? (_) {
+                  startLongPressRepeater(() {
+                    if (item.quantity < item.stock) {
+                      _changeQuantity(
+                          item: item,
+                          delta: 1,
+                          cartItemsNotifier: cartItemsNotifier);
+                    }
+                  });
+                }
+              : null,
+          onLongPressEnd: (_) => stopLongPressRepeater(),
+          child: IconButton(
+            icon: const Icon(Icons.add_circle_outline),
+            onPressed: item.quantity < item.stock
+                ? () {
+                    _changeQuantity(
+                        item: item,
+                        delta: 1,
+                        cartItemsNotifier: cartItemsNotifier);
+                  }
+                : null,
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.delete, color: Colors.redAccent),
+          tooltip: '削除',
+          onPressed: () {
+            _deleteCartItem(item, cartItemsNotifier);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCartItem(
+      BuildContext context,
+      CartItemModel item,
+      StateController<List<CartItemModel>> cartItemsNotifier,
+      ) {
+    final int subTotal = item.price * item.quantity;
+    final int taxedSubTotal = (subTotal * 1.1).round();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 12, right: 8),
+            child: item.image_url.isNotEmpty
+                ? Image.network(
+                    imageBaseUrl + item.image_url,
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.contain,
+                  )
+                : const Icon(Icons.image_outlined, size: 50),
+          ),
+          // Expanded Title/Sub/Controls
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.name,
+                  style: const TextStyle(fontSize: 16),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text('価格: ¥${formatYen(item.price)}'),
+                // 選択数: 数変更可能UI
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: _buildQuantityControls(context, item, cartItemsNotifier),
+                ),
+              ],
+            ),
+          ),
+          // Trailing (小計/税込み)
+          Padding(
+            padding: const EdgeInsets.only(left: 6, right: 10, top: 3),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '小計: ¥${formatYen(subTotal)}',
+                  style: const TextStyle(fontSize: 14),
+                ),
+                Text(
+                  '税込み: ¥${formatYen(taxedSubTotal)}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.black54,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTotalBar(
+      BuildContext context, int totalPrice, UserModel? user) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      color: Colors.grey.shade100,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Text(
+            '税込み合計',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          const SizedBox(width: 18),
+          Text(
+            '¥${formatYen((totalPrice * 1.1).round())}',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 22,
+              color: Colors.deepOrange,
+            ),
+          ),
+          const Spacer(),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                if (user == null) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const Login(),
+                    ),
+                  );
+                } else {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const PurchasePage(),
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+              icon: const Icon(Icons.shopping_bag),
+              label: const Text('購入する'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cartItems = ref.watch(cartItemsProvider);
@@ -37,277 +264,14 @@ class CartState extends ConsumerState<Cart> {
                     itemCount: cartItems.length,
                     separatorBuilder: (context, index) =>
                         const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final item = cartItems[index];
-                      final int subTotal = item.price * item.quantity;
-                      final int taxedSubTotal = (subTotal * 1.1).round();
-
-                      // ListTileの部分をRowを使ってwrapし、Overflow対策
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 4.0,
-                          horizontal: 0,
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                left: 12,
-                                right: 8,
-                              ),
-                              child: item.image_url.isNotEmpty
-                                  ? Image.network(
-                                      imageBaseUrl + item.image_url,
-                                      width: 50,
-                                      height: 50,
-                                      fit: BoxFit.contain,
-                                    )
-                                  : const Icon(Icons.image_outlined, size: 50),
-                            ),
-                            // Expanded Title/Sub/Controls
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    item.name,
-                                    style: const TextStyle(fontSize: 16),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  Text('価格: ¥${formatYen(item.price)}'),
-                                  // 選択数: 数変更可能UI (Wrapを使って対策)
-                                  SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: Row(
-                                      children: [
-                                        const Text('選択数: '),
-                                        GestureDetector(
-                                          onLongPressStart: item.quantity > 1
-                                              ? (_) {
-                                                  startLongPressRepeater(() {
-                                                    if (item.quantity > 1) {
-                                                      cartItemsNotifier
-                                                          .state = [
-                                                        for (final cartItem
-                                                            in cartItemsNotifier
-                                                                .state)
-                                                          if ((cartItem.id ==
-                                                                  item.id) &&
-                                                              cartItem.quantity >
-                                                                  1)
-                                                            cartItem.copyWith(
-                                                              quantity:
-                                                                  cartItem
-                                                                      .quantity -
-                                                                  1,
-                                                            )
-                                                          else
-                                                            cartItem,
-                                                      ];
-                                                    }
-                                                  });
-                                                }
-                                              : null,
-                                          onLongPressEnd: (_) =>
-                                              stopLongPressRepeater(),
-                                          child: IconButton(
-                                            icon: const Icon(
-                                              Icons.remove_circle_outline,
-                                            ),
-                                            onPressed: item.quantity > 1
-                                                ? () {
-                                                    cartItemsNotifier.state = [
-                                                      for (final cartItem
-                                                          in cartItemsNotifier
-                                                              .state)
-                                                        if ((cartItem.id ==
-                                                                item.id) &&
-                                                            (cartItem.quantity <
-                                                                cartItem.stock))
-                                                          cartItem.copyWith(
-                                                            quantity:
-                                                                item.quantity -
-                                                                1,
-                                                          )
-                                                        else
-                                                          cartItem,
-                                                    ];
-                                                  }
-                                                : null,
-                                          ),
-                                        ),
-                                        Text(
-                                          '${item.quantity}',
-                                          style: const TextStyle(fontSize: 16),
-                                        ),
-                                        GestureDetector(
-                                          onLongPressStart:
-                                              item.quantity < item.stock
-                                              ? (_) {
-                                                  startLongPressRepeater(() {
-                                                    if (item.quantity <
-                                                        item.stock) {
-                                                      cartItemsNotifier
-                                                          .state = [
-                                                        for (final cartItem
-                                                            in cartItemsNotifier
-                                                                .state)
-                                                          if ((cartItem.id ==
-                                                                  item.id) &&
-                                                              (cartItem
-                                                                      .quantity <
-                                                                  cartItem
-                                                                      .stock))
-                                                            cartItem.copyWith(
-                                                              quantity:
-                                                                  cartItem
-                                                                      .quantity +
-                                                                  1,
-                                                            )
-                                                          else
-                                                            cartItem,
-                                                      ];
-                                                    }
-                                                  });
-                                                }
-                                              : null,
-                                          onLongPressEnd: (_) =>
-                                              stopLongPressRepeater(),
-                                          child: IconButton(
-                                            icon: const Icon(
-                                              Icons.add_circle_outline,
-                                            ),
-                                            onPressed:
-                                                item.quantity < item.stock
-                                                ? () {
-                                                    cartItemsNotifier.state = [
-                                                      for (final cartItem
-                                                          in cartItemsNotifier
-                                                              .state)
-                                                        if (cartItem.id ==
-                                                            item.id)
-                                                          cartItem.copyWith(
-                                                            quantity:
-                                                                item.quantity +
-                                                                1,
-                                                          )
-                                                        else
-                                                          cartItem,
-                                                    ];
-                                                  }
-                                                : null,
-                                          ),
-                                        ),
-                                        // 削除ボタン追加
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.delete,
-                                            color: Colors.redAccent,
-                                          ),
-                                          tooltip: '削除',
-                                          onPressed: () {
-                                            cartItemsNotifier.state = [
-                                              for (final cartItem
-                                                  in cartItemsNotifier.state)
-                                                if (cartItem.id != item.id)
-                                                  cartItem,
-                                            ];
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Trailing (小計/税込み)
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                left: 6,
-                                right: 10,
-                                top: 3,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    '小計: ¥${formatYen(subTotal)}',
-                                    style: const TextStyle(fontSize: 14),
-                                  ),
-                                  Text(
-                                    '税込み: ¥${formatYen(taxedSubTotal)}',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.black54,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                    itemBuilder: (context, index) => _buildCartItem(
+                      context,
+                      cartItems[index],
+                      cartItemsNotifier,
+                    ),
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  color: Colors.grey.shade100,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const Text(
-                        '税込み合計',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                        //overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(width: 18),
-                      Text(
-                        '¥${formatYen((totalPrice * 1.1).round())}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 22,
-                          color: Colors.deepOrange,
-                        ),
-                        //overflow: TextOverflow.ellipsis,
-                      ),
-                      const Spacer(),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            if (user == null) {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const Login(),
-                                ),
-                              );
-                            } else {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const PurchasePage(),
-                                ),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,
-                          ),
-                          icon: const Icon(Icons.shopping_bag),
-                          label: const Text('購入する'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                _buildTotalBar(context, totalPrice, user),
               ],
             ),
     );
