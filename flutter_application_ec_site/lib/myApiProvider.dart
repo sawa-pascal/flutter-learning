@@ -57,22 +57,79 @@ Future<List<dynamic>> items(Ref ref) async {
 }
 
 @riverpod
-Future<dynamic> login(Ref ref, {required String email, required String password}) async {
+Future<dynamic> login(
+  Ref ref, {
+  required String email,
+  required String password,
+}) async {
   final client = http.Client();
   try {
     final response = await client.get(
-      Uri.http(
-        apiBaseUrl,
-        '/api/get_user.php',
-        {
-          'email': email,
-          'password': password,
-        },
-      ),
+      Uri.http(apiBaseUrl, '/api/get_user.php', {
+        'email': email,
+        'password': password,
+      }),
     );
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);
       return jsonResponse['user'] ?? [];
+    } else {
+      throw Exception('サーバーエラー: ${response.statusCode}');
+    }
+  } on SocketException catch (e) {
+    throw Exception("ネットワークエラー: ${e.toString()}");
+  } on Exception catch (e) {
+    throw Exception("データ取得エラー: ${e.toString()}");
+  } finally {
+    client.close();
+  }
+}
+
+@riverpod
+Future<dynamic> purchase(
+  Ref ref,
+  int userId,
+  int paymentId,
+  List<int> itemIds,
+  List<int> quantities,
+) async {
+  final client = http.Client();
+  try {
+    final response = await client.post(
+      Uri.http(apiBaseUrl, '/api/sales/purchase.php'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'user_id': userId,
+        'payment_id': paymentId,
+        'item_ids': itemIds,
+        'quantities': quantities,
+      }),
+    );
+    if (response.statusCode == 200) {
+      final jsonResponse = jsonDecode(response.body);
+      return jsonResponse;
+    } else {
+      throw Exception('サーバーエラー: ${response.statusCode}');
+    }
+  } on SocketException catch (e) {
+    throw Exception("ネットワークエラー: ${e.toString()}");
+  } on Exception catch (e) {
+    throw Exception("データ取得エラー: ${e.toString()}");
+  } finally {
+    client.close();
+  }
+}
+
+@riverpod
+Future<dynamic> payments(Ref ref) async {
+  final client = http.Client();
+  try {
+    final response = await client.post(
+      Uri.http(apiBaseUrl, '/api/sales/get_payment.php'),
+    );
+    if (response.statusCode == 200) {
+      final jsonResponse = jsonDecode(response.body);
+      return jsonResponse['payments'] ?? [];
     } else {
       throw Exception('サーバーエラー: ${response.statusCode}');
     }
