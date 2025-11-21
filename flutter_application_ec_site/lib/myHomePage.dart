@@ -10,14 +10,29 @@ import 'item.dart';
 import 'errorView.dart';
 
 /// ホーム画面のウィジェット
-class MyHomePage extends ConsumerWidget {
+class MyHomePage extends ConsumerStatefulWidget {
   const MyHomePage({Key? key, required this.title}) : super(key: key);
 
   /// アプリバーに表示するタイトル
   final String title;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends ConsumerState<MyHomePage> {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // ページが表示されるたびに商品一覧Providerをinvalidate
+    // これにより常に最新の商品情報が取得される
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(itemsProvider);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // 商品一覧データ（itemsProvider）を監視（非同期：ローディング・エラー・データ）
     final itemsAsync = ref.watch(itemsProvider);
     // ログイン済みユーザー情報（なければnull）
@@ -25,7 +40,7 @@ class MyHomePage extends ConsumerWidget {
 
     return Scaffold(
       // アプリ共通のAppBar（appBar.dartのbuildAppBarを利用）
-      appBar: buildAppBar(context, title, userModel),
+      appBar: buildAppBar(context, widget.title, userModel),
       // メイン画面
       body: Column(
         children: [
