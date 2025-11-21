@@ -9,6 +9,45 @@ part of 'myApiProvider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
+@ProviderFor(categories)
+const categoriesProvider = CategoriesProvider._();
+
+final class CategoriesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<dynamic>>,
+          List<dynamic>,
+          FutureOr<List<dynamic>>
+        >
+    with $FutureModifier<List<dynamic>>, $FutureProvider<List<dynamic>> {
+  const CategoriesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'categoriesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$categoriesHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<dynamic>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<dynamic>> create(Ref ref) {
+    return categories(ref);
+  }
+}
+
+String _$categoriesHash() => r'a2448766e4cfa16e5bd5407e7a313a50df365553';
+
 @ProviderFor(items)
 const itemsProvider = ItemsProvider._();
 

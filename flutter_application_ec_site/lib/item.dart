@@ -1,67 +1,310 @@
-
 import 'package:flutter/material.dart';
 import 'myApiProvider.dart';
+// カテゴリー一覧取得用Provider
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+// カートモデル等をインポート
+import 'models/cartItemModel/cartItemModel.dart';
 
 /// 商品リストを表示するウィジェット
-class ItemList extends StatelessWidget {
+class ItemList extends ConsumerWidget {
   final List<dynamic> items;
-
-  const ItemList({
-    Key? key,
-    required this.items,
-  }) : super(key: key);
+  const ItemList({Key? key, required this.items}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    // ListView.separated で商品ごとの区切り線を表示
-    return ListView.separated(
-      physics: const AlwaysScrollableScrollPhysics(),
-      itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 4), // 商品ごとの間隔
-      itemBuilder: (context, index) => ItemCard(item: items[index]), // 1商品につきItemCard表示
+  Widget build(BuildContext context, WidgetRef ref) {
+    final categoriesAsync = ref.watch(categoriesProvider);
+
+    // FutureBuilder的にAsyncValueを分岐して使う
+    return categoriesAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(child: Text('カテゴリー取得失敗: $error')),
+      data: (categories) {
+        // 商品をカテゴリーごとにグループ化: Map<category_id, List<item>>
+        final Map<String, List<dynamic>> itemsByCategory = {};
+        for (final item in items) {
+          final cid = item['category_id']?.toString() ?? '0';
+          itemsByCategory.putIfAbsent(cid, () => []).add(item);
+        }
+
+        // カテゴリーorder順でソートしたカテゴリーリスト
+        final sortedCategories = List<Map<String, dynamic>>.from(categories);
+        sortedCategories.sort((a, b) {
+          final ao = int.tryParse(a['order'].toString()) ?? 9999;
+          final bo = int.tryParse(b['order'].toString()) ?? 9999;
+          return ao.compareTo(bo);
+        });
+
+        // 表示用: 各カテゴリーのセクション(header＋商品リスト)
+        return ListView.separated(
+          physics: const AlwaysScrollableScrollPhysics(),
+          itemCount: sortedCategories.length,
+          separatorBuilder: (context, index) => const Divider(
+            height: 0,
+            thickness: 2,
+            indent: 0,
+            endIndent: 0,
+            color: Colors.grey,
+          ),
+          itemBuilder: (context, catIndex) {
+            final category = sortedCategories[catIndex];
+            final categoryId = category['id'].toString();
+            final categoryName = category['name']?.toString() ?? '未分類';
+            final categoryItems = itemsByCategory[categoryId] ?? [];
+
+            if (categoryItems.isEmpty) {
+              // このカテゴリに商品が無ければセクションをスキップ
+              return const SizedBox.shrink();
+            }
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // カテゴリー名
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 12,
+                    ),
+                    child: Text(
+                      categoryName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Colors.blueGrey,
+                      ),
+                    ),
+                  ),
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: categoryItems.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 4),
+                    itemBuilder: (context, index) =>
+                        ItemCard(item: categoryItems[index]),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
 
 /// 商品1件の情報カード
-class ItemCard extends StatelessWidget {
+class ItemCard extends ConsumerWidget {
   final dynamic item;
 
-  const ItemCard({
-    Key? key,
-    required this.item,
-  }) : super(key: key);
+  const ItemCard({Key? key, required this.item}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    // 画像URL、商品名、価格、説明を取り出す
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 画像URL、商品名、価格、説明、在庫数を取り出す
     final imageUrl = _extractImageUrl(item);
     final name = item['name']?.toString() ?? '名称不明';
     final price = _formatPrice(item['price']);
     final description = item['description']?.toString();
+    final stock = _formatStock(item['quantity']);
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       elevation: 3,
-      child: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 商品画像部分
-            ItemImage(imageUrl: imageUrl),
-            const SizedBox(width: 12),
-            // 商品の詳細情報
-            Expanded(
-              child: _ItemDetails(
-                name: name,
-                price: price,
-                description: description,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(4),
+        onTap: () =>
+            _showItemDetailDialog(context, ref, item, name, imageUrl, price, description, stock),
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // サムネイル画像
+              ItemImage(imageUrl: imageUrl),
+              const SizedBox(width: 12),
+              // 商品情報詳細
+              Expanded(
+                child: _ItemDetails(
+                  name: name,
+                  price: price,
+                  description: description,
+                  stock: stock,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  /// 商品拡大表示ダイアログを表示
+  void _showItemDetailDialog(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic item,
+    String name,
+    String? imageUrl,
+    String? price,
+    String? description,
+    String? stock,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Material(
+                borderRadius: BorderRadius.circular(16),
+                clipBehavior: Clip.antiAlias,
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // 拡大画像
+                      if (imageUrl != null)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            imageUrl,
+                            fit: BoxFit.contain,
+                            height: 180,
+                            errorBuilder: (_, __, ___) =>
+                                const Icon(Icons.image),
+                          ),
+                        ),
+                      const SizedBox(height: 16),
+                      // 商品名
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // 価格
+                      if (price != null)
+                        Text(
+                          price,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: Colors.cyan,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      // 在庫数
+                      if (stock != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6.0, bottom: 6.0),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.inventory_2, size: 18, color: Colors.grey),
+                              const SizedBox(width: 4),
+                              Text(
+                                stock,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      const SizedBox(height: 8),
+                      // 商品説明
+                      if (description != null && description.trim().isNotEmpty)
+                        Text(
+                          description,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      const SizedBox(height: 20),
+
+                      // カートへ追加ボタン
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Consumer(
+                          builder: (context, ref, _) {
+                            return ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.orange,
+                                foregroundColor: Colors.white,
+                              ),
+                              icon: const Icon(Icons.shopping_cart_outlined),
+                              label: const Text('カートへ追加'),
+                              onPressed: () {
+                                // ここでcartItemsProviderへ追加
+                                final cartItem = CartItemModel(
+                                  id: item['id'] is int
+                                      ? item['id']
+                                      : int.tryParse(item['id'].toString()) ?? 0,
+                                  name: item['name'] ?? "",
+                                  price: item['price'] is int
+                                      ? item['price']
+                                      : int.tryParse(item['price'].toString()) ?? 0,
+                                  stock: item['quantity'] is int
+                                      ? item['quantity']
+                                      : int.tryParse(item['quantity'].toString()) ?? 0,
+                                  quantity: 1,
+                                  image_url: item['image_url']?.toString() ?? "",
+                                );
+
+                                final cartItems = ref.read(cartItemsProvider);
+
+                                // 既に同じidの商品があればquantityだけ増やす
+                                final existingIndex = cartItems.indexWhere((ci) => ci.id == cartItem.id);
+                                if (existingIndex != -1) {
+                                  final updatedCartItems = [...cartItems];
+                                  final existingItem = updatedCartItems[existingIndex];
+                                  updatedCartItems[existingIndex] = existingItem.copyWith(
+                                    quantity: existingItem.quantity + 1,
+                                  );
+                                  ref.read(cartItemsProvider.notifier).state = updatedCartItems;
+                                } else {
+                                  ref.read(cartItemsProvider.notifier).state = [
+                                    ...cartItems,
+                                    cartItem,
+                                  ];
+                                }
+
+                                Navigator.of(context).pop();
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('カートに追加しました')),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // 閉じるボタン
+                      Align(
+                        alignment: Alignment.bottomRight,
+                        child: TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('閉じる'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -88,19 +331,37 @@ class ItemCard extends StatelessWidget {
     // パースできなかった場合はそのまま表示
     return '¥$price';
   }
+
+  /// 在庫数をフォーマットする（在庫数：5 など）
+  String? _formatStock(dynamic stock) {
+    if (stock == null) return null;
+    int? stockInt;
+    if (stock is int) {
+      stockInt = stock;
+    } else if (stock is String) {
+      stockInt = int.tryParse(stock);
+    }
+    if (stockInt != null) {
+      return '在庫数: $stockInt';
+    }
+    // パースできなかった場合はそのまま表示
+    return '在庫数: $stock';
+  }
 }
 
-/// 商品詳細（名前・値段・説明文）部分ウィジェット
+/// 商品詳細（名前・値段・説明文、在庫数）部分ウィジェット
 class _ItemDetails extends StatelessWidget {
   final String name;
   final String? price;
   final String? description;
+  final String? stock;
 
   const _ItemDetails({
     Key? key,
     required this.name,
     this.price,
     this.description,
+    this.stock,
   }) : super(key: key);
 
   @override
@@ -111,10 +372,7 @@ class _ItemDetails extends StatelessWidget {
         // 商品名
         Text(
           name,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         // 価格（存在する場合）
         if (price != null) ...[
@@ -135,6 +393,20 @@ class _ItemDetails extends StatelessWidget {
             ),
           ),
         ],
+        // 在庫数（存在する場合）
+        if (stock != null) ...[
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Icon(Icons.inventory_2, size: 16, color: Colors.grey),
+              const SizedBox(width: 4),
+              Text(
+                stock!,
+                style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ],
         // 説明文（空でない場合）
         if (description != null && description!.trim().isNotEmpty) ...[
           const SizedBox(height: 8),
@@ -142,10 +414,7 @@ class _ItemDetails extends StatelessWidget {
             description!,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.black87,
-            ),
+            style: const TextStyle(fontSize: 14, color: Colors.black87),
           ),
         ],
       ],
@@ -187,4 +456,3 @@ class ItemImage extends StatelessWidget {
     );
   }
 }
-
