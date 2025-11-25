@@ -237,3 +237,27 @@ Future<dynamic> changePassword(
     client.close();
   }
 }
+
+@riverpod
+Future<List<dynamic>> prefectures(Ref ref) async {
+  final client = http.Client();
+  try {
+    final response = await client.get(
+      Uri.http(apiBaseUrl, '/api/get_prefectures_list.php'),
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      final jsonResponse = jsonDecode(response.body);
+      return jsonResponse['prefectures'] ?? [];
+    } else {
+      throw Exception('サーバーエラー: ${response.statusCode}');
+    }
+  } on SocketException catch (e) {
+    throw Exception("ネットワークエラー: ${e.toString()}");
+  } on Exception catch (e) {
+    throw Exception("データ取得エラー: ${e.toString()}");
+  } finally {
+    client.close();
+  }
+}

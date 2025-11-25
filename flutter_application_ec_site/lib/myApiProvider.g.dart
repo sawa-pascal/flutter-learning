@@ -419,7 +419,7 @@ final class UpdateUserProvider
   }
 }
 
-String _$updateUserHash() => r'31f700cf5fe193d6e3c2cdb547f68840f8aa45f1';
+String _$updateUserHash() => r'c8a2dacdcd16dd3fba63eff9e6fcb95ae3db0fbd';
 
 final class UpdateUserFamily extends $Family
     with
@@ -548,3 +548,42 @@ final class ChangePasswordFamily extends $Family
   @override
   String toString() => r'changePasswordProvider';
 }
+
+@ProviderFor(prefectures)
+const prefecturesProvider = PrefecturesProvider._();
+
+final class PrefecturesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<dynamic>>,
+          List<dynamic>,
+          FutureOr<List<dynamic>>
+        >
+    with $FutureModifier<List<dynamic>>, $FutureProvider<List<dynamic>> {
+  const PrefecturesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'prefecturesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$prefecturesHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<dynamic>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<dynamic>> create(Ref ref) {
+    return prefectures(ref);
+  }
+}
+
+String _$prefecturesHash() => r'0a6a5b96d18064907010b8ff90b7737be3728317';
