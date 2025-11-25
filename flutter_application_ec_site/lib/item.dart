@@ -634,13 +634,6 @@ class _ItemDetails extends StatelessWidget {
               fontSize: 16,
               color: Colors.grey,
               fontWeight: FontWeight.w600,
-              shadows: [
-                Shadow(
-                  color: Colors.black,
-                  offset: Offset(0, 0),
-                  blurRadius: 1.5,
-                ),
-              ],
             ),
           ),
         ],

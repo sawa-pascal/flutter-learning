@@ -9,8 +9,8 @@ import 'package:http/http.dart' as http;
 part 'myApiProvider.g.dart';
 
 /// サーバーアドレスと画像のベースURL
-const String apiBaseUrl = '3.26.29.114';
-const String imageBaseUrl = 'http://3.26.29.114/images/';
+const String apiBaseUrl = '3.107.5.53';
+const String imageBaseUrl = 'http://3.107.5.53/images/';
 
 @riverpod
 Future<List<dynamic>> categories(Ref ref) async {
@@ -130,6 +130,31 @@ Future<dynamic> payments(Ref ref) async {
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);
       return jsonResponse['payments'] ?? [];
+    } else {
+      throw Exception('サーバーエラー: ${response.statusCode}');
+    }
+  } on SocketException catch (e) {
+    throw Exception("ネットワークエラー: ${e.toString()}");
+  } on Exception catch (e) {
+    throw Exception("データ取得エラー: ${e.toString()}");
+  } finally {
+    client.close();
+  }
+}
+
+@riverpod
+Future<dynamic> purchaseHistory(Ref ref, int user_id) async {
+  final client = http.Client();
+  try {
+    final response = await client.post(
+      Uri.http(apiBaseUrl, '/api/sales/get_purchase_history.php'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'user_id': user_id}),
+    );
+
+    if (response.statusCode == 200) {
+      final jsonResponse = jsonDecode(response.body);
+      return jsonResponse['purchase_history'] ?? [];
     } else {
       throw Exception('サーバーエラー: ${response.statusCode}');
     }
