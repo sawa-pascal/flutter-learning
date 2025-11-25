@@ -341,3 +341,210 @@ final class PurchaseHistoryFamily extends $Family
   @override
   String toString() => r'purchaseHistoryProvider';
 }
+
+@ProviderFor(updateUser)
+const updateUserProvider = UpdateUserFamily._();
+
+final class UpdateUserProvider
+    extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
+    with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+  const UpdateUserProvider._({
+    required UpdateUserFamily super.from,
+    required ({
+      int id,
+      String name,
+      String email,
+      String hashed_password,
+      String tel,
+      int prefecture_id,
+      String address,
+    })
+    super.argument,
+  }) : super(
+         retry: null,
+         name: r'updateUserProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$updateUserHash();
+
+  @override
+  String toString() {
+    return r'updateUserProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<dynamic> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<dynamic> create(Ref ref) {
+    final argument =
+        this.argument
+            as ({
+              int id,
+              String name,
+              String email,
+              String hashed_password,
+              String tel,
+              int prefecture_id,
+              String address,
+            });
+    return updateUser(
+      ref,
+      id: argument.id,
+      name: argument.name,
+      email: argument.email,
+      hashed_password: argument.hashed_password,
+      tel: argument.tel,
+      prefecture_id: argument.prefecture_id,
+      address: argument.address,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is UpdateUserProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$updateUserHash() => r'31f700cf5fe193d6e3c2cdb547f68840f8aa45f1';
+
+final class UpdateUserFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<dynamic>,
+          ({
+            int id,
+            String name,
+            String email,
+            String hashed_password,
+            String tel,
+            int prefecture_id,
+            String address,
+          })
+        > {
+  const UpdateUserFamily._()
+    : super(
+        retry: null,
+        name: r'updateUserProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  UpdateUserProvider call({
+    required int id,
+    required String name,
+    required String email,
+    required String hashed_password,
+    required String tel,
+    required int prefecture_id,
+    required String address,
+  }) => UpdateUserProvider._(
+    argument: (
+      id: id,
+      name: name,
+      email: email,
+      hashed_password: hashed_password,
+      tel: tel,
+      prefecture_id: prefecture_id,
+      address: address,
+    ),
+    from: this,
+  );
+
+  @override
+  String toString() => r'updateUserProvider';
+}
+
+@ProviderFor(changePassword)
+const changePasswordProvider = ChangePasswordFamily._();
+
+final class ChangePasswordProvider
+    extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
+    with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+  const ChangePasswordProvider._({
+    required ChangePasswordFamily super.from,
+    required ({int id, String newPassword}) super.argument,
+  }) : super(
+         retry: null,
+         name: r'changePasswordProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$changePasswordHash();
+
+  @override
+  String toString() {
+    return r'changePasswordProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<dynamic> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<dynamic> create(Ref ref) {
+    final argument = this.argument as ({int id, String newPassword});
+    return changePassword(
+      ref,
+      id: argument.id,
+      newPassword: argument.newPassword,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is ChangePasswordProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$changePasswordHash() => r'c710c9faeaa6bbdb47058e715619dba34a2c1a41';
+
+final class ChangePasswordFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<dynamic>,
+          ({int id, String newPassword})
+        > {
+  const ChangePasswordFamily._()
+    : super(
+        retry: null,
+        name: r'changePasswordProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  ChangePasswordProvider call({required int id, required String newPassword}) =>
+      ChangePasswordProvider._(
+        argument: (id: id, newPassword: newPassword),
+        from: this,
+      );
+
+  @override
+  String toString() => r'changePasswordProvider';
+}

@@ -166,3 +166,74 @@ Future<dynamic> purchaseHistory(Ref ref, int user_id) async {
     client.close();
   }
 }
+
+@riverpod
+Future<dynamic> updateUser(
+  Ref ref, {
+  required int id,
+  required String name,
+  required String email,
+  required String hashed_password,
+  required String tel,
+  required int prefecture_id,
+  required String address,
+}) async {
+  final client = http.Client();
+  try {
+    final response = await client.post(
+      Uri.http(apiBaseUrl, '/api/users/update_users.php'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'id': id,
+        'name': name,
+        'email': email,
+        'hashed_password': hashed_password,
+        'tel': tel,
+        'prefecture_id': prefecture_id,
+        'address': address,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final jsonResponse = jsonDecode(response.body);
+      return jsonResponse['message'] ?? '';
+    } else {
+      throw Exception('サーバーエラー: ${response.statusCode}');
+    }
+  } on SocketException catch (e) {
+    throw Exception("ネットワークエラー: ${e.toString()}");
+  } on Exception catch (e) {
+    throw Exception("データ取得エラー: ${e.toString()}");
+  } finally {
+    client.close();
+  }
+}
+
+@riverpod
+Future<dynamic> changePassword(
+  Ref ref, {
+  required int id,
+  required String newPassword,
+}) async {
+  final client = http.Client();
+  try {
+    final response = await client.post(
+      Uri.http(apiBaseUrl, '/api/users/change_user_password.php'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'id': id, 'newPassword': newPassword}),
+    );
+
+    if (response.statusCode == 200) {
+      final jsonResponse = jsonDecode(response.body);
+      return jsonResponse['message'] ?? '';
+    } else {
+      throw Exception('サーバーエラー: ${response.statusCode}');
+    }
+  } on SocketException catch (e) {
+    throw Exception("ネットワークエラー: ${e.toString()}");
+  } on Exception catch (e) {
+    throw Exception("データ取得エラー: ${e.toString()}");
+  } finally {
+    client.close();
+  }
+}
