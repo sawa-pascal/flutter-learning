@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'login.dart';
 import 'cart.dart';
 import 'models/userModel/userModel.dart';
+import 'purchaseHistory.dart';
 import 'myApiProvider.dart';
 
 /// アプリ共通のAppBarを生成する関数
@@ -13,7 +14,14 @@ AppBar buildAppBar(BuildContext context, String title, UserModel? userModel) {
     // タイトルウィジェット
     title: _AppBarTitle(title: title),
     centerTitle: true, // タイトルを中央寄せ
-    leading: const Icon(Icons.home), // 先頭に「ホーム」アイコン
+    leading: IconButton(
+      icon: const Icon(Icons.home), // 先頭に「ホーム」アイコン
+      onPressed: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => const PurchaseHistory()),
+        );
+      },
+    ),
     actions: [
       // 検索アイコン
       const Icon(Icons.search),
