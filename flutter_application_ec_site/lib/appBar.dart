@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_ec_site/passwordChange.dart';
+import 'package:flutter_application_ec_site/userSetting.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'login.dart';
 import 'cart.dart';
@@ -80,28 +81,9 @@ class _UserAction extends ConsumerWidget {
                   builder: (context) => const PurchaseHistory(),
                 ),
               );
-            } else if (value == 'userInfo') {
-              // Example: User Infoページがなければダイアログで代用
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('ユーザー情報'),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('ユーザー名: ${userModel!.name}'),
-                      const SizedBox(height: 4),
-                      Text('メール: ${userModel!.email}'),
-                    ],
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('閉じる'),
-                    ),
-                  ],
-                ),
+            } else if (value == 'userSetting') {
+              Navigator.of(context, rootNavigator: true).push(
+                MaterialPageRoute(builder: (context) => const UserSetting()),
               );
             } else if (value == 'changePassword') {
               Navigator.of(context, rootNavigator: true).push(
@@ -146,8 +128,8 @@ class _UserAction extends ConsumerWidget {
               child: Text('購入履歴'),
             ),
             const PopupMenuItem<String>(
-              value: 'userInfo',
-              child: Text('ユーザー情報'),
+              value: 'userSetting',
+              child: Text('ユーザー設定'),
             ),
             const PopupMenuItem<String>(
               value: 'changePassword',
