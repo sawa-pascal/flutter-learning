@@ -15,16 +15,14 @@ AppBar buildAppBar(BuildContext context, String title, UserModel? userModel) {
     title: _AppBarTitle(title: title),
     centerTitle: true, // タイトルを中央寄せ
     leading: IconButton(
-      icon: const Icon(Icons.home), // 先頭に「ホーム」アイコン
+      icon: const Icon(Icons.search), // 先頭に「ホーム」アイコン
       onPressed: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => const PurchaseHistory()),
-        );
+        // Navigator.of(context).push(
+        //   MaterialPageRoute(builder: (context) => const PurchaseHistory()),
+        // );
       },
     ),
     actions: [
-      // 検索アイコン
-      const Icon(Icons.search),
       // ユーザーのログイン状態によって「ログイン」ボタンかユーザー名表示
       _UserAction(userModel: userModel, context: context),
       // カートボタン
