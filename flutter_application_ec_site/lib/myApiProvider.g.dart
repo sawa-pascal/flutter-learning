@@ -272,3 +272,72 @@ final class PaymentsProvider
 }
 
 String _$paymentsHash() => r'0faa7d29a64ffb0cef8fd6e086de0f341c96a0f6';
+
+@ProviderFor(purchaseHistory)
+const purchaseHistoryProvider = PurchaseHistoryFamily._();
+
+final class PurchaseHistoryProvider
+    extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
+    with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+  const PurchaseHistoryProvider._({
+    required PurchaseHistoryFamily super.from,
+    required int super.argument,
+  }) : super(
+         retry: null,
+         name: r'purchaseHistoryProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$purchaseHistoryHash();
+
+  @override
+  String toString() {
+    return r'purchaseHistoryProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<dynamic> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<dynamic> create(Ref ref) {
+    final argument = this.argument as int;
+    return purchaseHistory(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is PurchaseHistoryProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$purchaseHistoryHash() => r'83c120b0e532fe2c73c4c47810bf54ff7e07321f';
+
+final class PurchaseHistoryFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<dynamic>, int> {
+  const PurchaseHistoryFamily._()
+    : super(
+        retry: null,
+        name: r'purchaseHistoryProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  PurchaseHistoryProvider call(int user_id) =>
+      PurchaseHistoryProvider._(argument: user_id, from: this);
+
+  @override
+  String toString() => r'purchaseHistoryProvider';
+}
