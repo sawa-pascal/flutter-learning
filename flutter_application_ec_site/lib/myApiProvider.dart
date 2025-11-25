@@ -196,7 +196,7 @@ Future<dynamic> updateUser(
 
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);
-      return jsonResponse['message'] ?? '';
+      return jsonResponse ?? '';
     } else {
       throw Exception('サーバーエラー: ${response.statusCode}');
     }
