@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_ec_site/passwordChange.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'login.dart';
 import 'cart.dart';
@@ -103,19 +104,8 @@ class _UserAction extends ConsumerWidget {
                 ),
               );
             } else if (value == 'changePassword') {
-              // パスワード変更ページ、未実装ならダイアログで案内
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('パスワード変更'),
-                  content: const Text('パスワード変更ページは未実装です。'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('OK'),
-                    ),
-                  ],
-                ),
+              Navigator.of(context, rootNavigator: true).push(
+                MaterialPageRoute(builder: (context) => const PasswordChange()),
               );
             } else if (value == 'logout') {
               // ログアウト処理（ユーザーモデルのリセットやAPI呼び出し等）
@@ -168,7 +158,7 @@ class _UserAction extends ConsumerWidget {
           child: Row(
             children: [
               Text(
-                userModel!.name,
+                '購入履歴・設定',
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
