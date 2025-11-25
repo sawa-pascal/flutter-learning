@@ -5,7 +5,6 @@ import 'cart.dart';
 import 'myApiProvider.dart';
 import 'models/userModel/userModel.dart';
 import 'appBar.dart';
-import 'userInfoSection.dart';
 import 'item.dart';
 import 'errorView.dart';
 
@@ -21,6 +20,15 @@ class MyHomePage extends ConsumerStatefulWidget {
 }
 
 class _MyHomePageState extends ConsumerState<MyHomePage> {
+  final TextEditingController _searchController = TextEditingController();
+  // 自動フォーカスしないためFocusNodeを削除
+  String _searchKeyword = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -40,15 +48,26 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
 
     return Scaffold(
       // アプリ共通のAppBar（appBar.dartのbuildAppBarを利用）
-      appBar: buildAppBar(context, widget.title, userModel),
-      // メイン画面
-      body: Column(
-        children: [
-          // ユーザー情報セクション（ログイン時は情報表示、未ログイン時は空白）
-          UserInfoSection(userModel: userModel),
-          // 商品リストやローディング・エラー表示部
-          Expanded(child: _buildItemsSection(ref, itemsAsync)),
-        ],
+      appBar: buildAppBar(
+        context,
+        widget.title,
+        userModel,
+        onSearchPressed: () {}, // フォーカス処理を無効化
+      ),
+      // 検索フォーカス外し対応: GestureDetectorでラップ
+      body: GestureDetector(
+        // 画面のどこかをタップしたときに検索フィールドのフォーカスを外す
+        behavior: HitTestBehavior.translucent,
+        onTap: () {
+          FocusScope.of(context).unfocus();
+        },
+        child: Column(
+          children: [
+            _buildSearchField(),
+            // 商品リストやローディング・エラー表示部
+            Expanded(child: _buildItemsSection(ref, itemsAsync)),
+          ],
+        ),
       ),
 
       floatingActionButton: FloatingActionButton(
@@ -60,6 +79,44 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
         backgroundColor: Colors.orange,
         child: const Icon(Icons.shopping_cart, color: Colors.white),
         tooltip: 'カートを見る',
+      ),
+    );
+  }
+
+  // フォーカス処理を削除
+  // void _focusSearchField() {
+  //   FocusScope.of(context).requestFocus(_searchFocusNode);
+  // }
+
+  Widget _buildSearchField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: TextField(
+        controller: _searchController,
+        // focusNodeの指定を削除（自動フォーカスなし）
+        onChanged: (value) {
+          setState(() {
+            _searchKeyword = value;
+          });
+        },
+        decoration: InputDecoration(
+          prefixIcon: const Icon(Icons.search),
+          hintText: '商品名で検索',
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          suffixIcon: _searchKeyword.isEmpty
+              ? null
+              : IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _searchKeyword = '';
+                    });
+                  },
+                ),
+        ),
       ),
     );
   }
@@ -76,20 +133,64 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
       error: (error, stack) => ErrorView(
         error: error,
         onRetry: () {
-          // 再取得（ref.refreshはProvider自体を再構築する、future型で再fetch）
-          ref.refresh(itemsProvider.future);
+          // Providerを無効化して再取得を促す
+          ref.invalidate(itemsProvider);
         },
       ),
       // 正常取得時：商品リストをリフレッシュ対応で表示
-      data: (items) => RefreshIndicator(
-        onRefresh: () async {
-          // Providerを無効化して再フェッチ
-          ref.invalidate(itemsProvider);
-          // 完全リフレッシュが終わるまで待つ
-          await ref.read(itemsProvider.future);
-        },
-        child: ItemList(items: items),
-      ),
+      data: (items) {
+        final filteredItems = _filterItems(items);
+        final hasQuery = _searchKeyword.trim().isNotEmpty;
+        final noItems = items.isEmpty;
+        final noMatches = filteredItems.isEmpty;
+
+        Widget listChild;
+        if ((noItems && !hasQuery) || (noMatches && hasQuery)) {
+          final message = noItems && !hasQuery
+              ? '商品情報がありません'
+              : '該当する商品が見つかりませんでした';
+          listChild = _buildMessageList(message);
+        } else {
+          listChild = ItemList(items: filteredItems);
+        }
+
+        return RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(itemsProvider);
+            await ref.read(itemsProvider.future);
+          },
+          child: listChild,
+        );
+      },
+    );
+  }
+
+  List<dynamic> _filterItems(List<dynamic> items) {
+    final query = _searchKeyword.trim().toLowerCase();
+    if (query.isEmpty) {
+      return items;
+    }
+
+    return items.where((item) {
+      final name = item['name']?.toString().toLowerCase() ?? '';
+      return name.contains(query);
+    }).toList();
+  }
+
+  Widget _buildMessageList(String message) {
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Center(
+            child: Text(
+              message,
+              style: const TextStyle(fontSize: 16),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

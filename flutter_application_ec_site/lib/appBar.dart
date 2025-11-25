@@ -6,33 +6,33 @@ import 'login.dart';
 import 'cart.dart';
 import 'models/userModel/userModel.dart';
 import 'purchaseHistory.dart';
-import 'myApiProvider.dart';
 
 /// アプリ共通のAppBarを生成する関数
 /// [title]：タイトルを表示
 /// [userModel]：ユーザー情報（ログイン済みの場合に利用）
-AppBar buildAppBar(BuildContext context, String title, UserModel? userModel) {
+AppBar buildAppBar(
+  BuildContext context,
+  String title,
+  UserModel? userModel, {
+  VoidCallback? onSearchPressed,
+}) {
   return AppBar(
     // タイトルウィジェット
     title: _AppBarTitle(title: title),
     centerTitle: true, // タイトルを中央寄せ
-    leading: IconButton(
-      icon: const Icon(Icons.search), // 先頭に「ホーム」アイコン
-      onPressed: () {
-        // Navigator.of(context).push(
-        //   MaterialPageRoute(builder: (context) => const PurchaseHistory()),
-        // );
-      },
-    ),
+
     actions: [
       // ユーザーのログイン状態によって「ログイン」ボタンかユーザー名表示
-      _UserAction(userModel: userModel, context: context),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: _UserAction(userModel: userModel, context: context),
+      ),
       // カートボタン
       _CartAction(context: context),
     ],
     elevation: 10, // 影の高さ
     backgroundColor: Colors.red, // AppBarの背景色
-    // flexibleSpace: const _AppBarImage(), // 背景画像（画像がAppBarの下層に敷かれる）
+    // flexibleSpace: Image.network(imageBaseUrl + 'stationery.jpeg'), // 背景画像サンプル
   );
 }
 
@@ -169,19 +169,6 @@ class _CartAction extends StatelessWidget {
         rootNavigator: true,
       ).push(MaterialPageRoute(builder: (context) => const Cart())),
       tooltip: 'Cartページへ',
-    );
-  }
-}
-
-/// AppBarの背景画像部分（flexibleSpace属性で重ねる）
-class _AppBarImage extends StatelessWidget {
-  const _AppBarImage();
-
-  @override
-  Widget build(BuildContext context) {
-    return Image.network(
-      imageBaseUrl + 'stationery.jpeg', // 指定の画像URL
-      fit: BoxFit.cover, // 枠内に画像全体を収める
     );
   }
 }
