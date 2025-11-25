@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'login.dart';
 import 'cart.dart';
 import 'models/userModel/userModel.dart';
+import 'myApiProvider.dart';
 
 /// アプリ共通のAppBarを生成する関数
 /// [title]：タイトルを表示
@@ -101,7 +102,7 @@ class _AppBarImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Image.network(
-      'http://3.26.29.114/images/%E3%83%8E%E3%83%BC%E3%83%88/1129031014690ad52f20b671.42419074.png', // 指定の画像URL
+      imageBaseUrl + '%E3%83%8E%E3%83%BC%E3%83%88/1129031014690ad52f20b671.42419074.png', // 指定の画像URL
       fit: BoxFit.contain, // 枠内に画像全体を収める
     );
   }
