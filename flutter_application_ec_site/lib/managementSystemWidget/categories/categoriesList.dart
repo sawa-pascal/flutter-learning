@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_ec_site/managementSystemWidget/categories/categoriesCreator.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../myApiProvider.dart';
 import '../paging.dart'; // ← Paginationウィジェットをインポート
@@ -21,6 +22,15 @@ class _CategoriesListPageState extends ConsumerState<CategoriesListPage> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    // このページを訪れるたびに強制リフレッシュ
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(categoriesProvider);
+    });
+    super.didChangeDependencies();
   }
 
   List<dynamic> _filterCategories(List<dynamic> categories) {
@@ -148,7 +158,9 @@ class _CategoriesListPageState extends ConsumerState<CategoriesListPage> {
               child: Builder(
                 builder: (context) {
                   // 状態によってページ数を参照
-                  final actualPageCount = pageCount != 0 ? pageCount : _cachedPageCount;
+                  final actualPageCount = pageCount != 0
+                      ? pageCount
+                      : _cachedPageCount;
                   return Pagination(
                     currentPage: _currentPage,
                     pageCount: actualPageCount,
@@ -162,7 +174,18 @@ class _CategoriesListPageState extends ConsumerState<CategoriesListPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () async {
+          // カテゴリー作成ページから戻った時も更新
+          final result = await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const CategoriesCreatorPage(),
+            ),
+          );
+          if (result == true) {
+            // 新規作成時もリフレッシュ
+            ref.invalidate(categoriesProvider);
+          }
+        },
         child: const Icon(Icons.add),
       ),
     );
