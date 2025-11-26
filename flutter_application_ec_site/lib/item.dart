@@ -1,12 +1,31 @@
 import 'package:flutter/material.dart';
-import 'myApiProvider.dart';
-// カテゴリー一覧取得用Provider
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// カートモデル等をインポート
+import 'myApiProvider.dart';
 import 'models/cartItemModel/cartItemModel.dart';
-
 import 'utility.dart';
+
+// ============================================================================
+// 定数定義
+// ============================================================================
+
+const double _categoryHeaderPaddingHorizontal = 16.0;
+const double _categoryHeaderPaddingVertical = 12.0;
+const double _categoryBottomSpacing = 16.0;
+const double _categoryTitleFontSize = 18.0;
+const double _categoryDividerThickness = 2.0;
+
+const Duration _scrollAnimationDuration = Duration(milliseconds: 500);
+const Duration _scrollRetryDelay = Duration(milliseconds: 300);
+const int _scrollMaxRetries = 8;
+
+const double _itemCardMarginHorizontal = 12.0;
+const double _itemCardMarginVertical = 8.0;
+const double _itemImageSize = 56.0;
+
+// ============================================================================
+// 商品リストウィジェット
+// ============================================================================
 
 /// 商品リストを表示するウィジェット
 class ItemList extends ConsumerStatefulWidget {
@@ -29,14 +48,13 @@ class ItemList extends ConsumerStatefulWidget {
 
 class _ItemListState extends ConsumerState<ItemList> {
   final Map<int, GlobalKey> _categoryKeys = {};
-  List<Map<String, dynamic>>? _sortedCategories;
-  Map<String, List<dynamic>>? _itemsByCategory;
-  final Map<int, double> _categoryPositions = {}; // カテゴリーID -> 実際の位置
+  final Map<int, double> _categoryPositions = {};
+  List<Map<String, dynamic>> _sortedCategories = [];
+  Map<String, List<dynamic>> _itemsByCategory = {};
 
   @override
   void didUpdateWidget(ItemList oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // 選択されたカテゴリーIDが変更された場合、スクロールを実行
     if (widget.selectedCategoryId != null &&
         widget.selectedCategoryId != oldWidget.selectedCategoryId &&
         widget.scrollController != null) {
@@ -46,110 +64,143 @@ class _ItemListState extends ConsumerState<ItemList> {
     }
   }
 
-  /// カテゴリーIDから、そのカテゴリーがリスト内の何番目のインデックスかを計算
-  /// （空のカテゴリーはスキップされるため、実際に表示されるインデックスを返す）
+  @override
+  Widget build(BuildContext context) {
+    final categoriesAsync = ref.watch(categoriesProvider);
+
+    return categoriesAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(child: Text('カテゴリー取得失敗: $error')),
+      data: (categories) {
+        _itemsByCategory = _groupItemsByCategory(widget.items);
+        _sortedCategories = _sortCategories(categories);
+        _ensureCategoryKeys();
+
+        return ListView.separated(
+          controller: widget.scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          itemCount: _sortedCategories.length,
+          separatorBuilder: (context, index) => const Divider(
+            height: 0,
+            thickness: _categoryDividerThickness,
+            color: Colors.grey,
+          ),
+          itemBuilder: _buildCategorySection,
+        );
+      },
+    );
+  }
+
+  Map<String, List<dynamic>> _groupItemsByCategory(List<dynamic> items) {
+    final map = <String, List<dynamic>>{};
+    for (final item in items) {
+      final cid = item['category_id']?.toString() ?? '0';
+      map.putIfAbsent(cid, () => []).add(item);
+    }
+    return map;
+  }
+
+  List<Map<String, dynamic>> _sortCategories(List<dynamic> categories) {
+    final sorted = List<Map<String, dynamic>>.from(categories);
+    sorted.sort((a, b) {
+      final ao = int.tryParse(a['order'].toString()) ?? 9999;
+      final bo = int.tryParse(b['order'].toString()) ?? 9999;
+      return ao.compareTo(bo);
+    });
+    return sorted;
+  }
+
+  void _ensureCategoryKeys() {
+    for (final category in _sortedCategories) {
+      final categoryId = int.tryParse(category['id'].toString());
+      if (categoryId != null && !_categoryKeys.containsKey(categoryId)) {
+        _categoryKeys[categoryId] = GlobalKey();
+      }
+    }
+  }
+
+  Widget _buildCategorySection(BuildContext context, int index) {
+    final category = _sortedCategories[index];
+    final categoryIdStr = category['id'].toString();
+    final categoryId = int.tryParse(categoryIdStr);
+    final categoryName = category['name']?.toString() ?? '未分類';
+    final categoryItems = _itemsByCategory[categoryIdStr] ?? [];
+
+    if (categoryItems.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return ItemCategorySection(
+      key: categoryId != null ? _categoryKeys[categoryId] : null,
+      categoryId: categoryId,
+      categoryName: categoryName,
+      categoryItems: categoryItems,
+      scrollController: widget.scrollController,
+      onPositionMeasured: categoryId != null && widget.scrollController != null
+          ? (position) => _categoryPositions[categoryId] = position
+          : null,
+    );
+  }
+
+  /// カテゴリーIDから表示インデックスを算出（空のカテゴリーはスキップ）
   int? _getCategoryIndex(int categoryId) {
-    if (_sortedCategories == null || _itemsByCategory == null) return null;
-    
     final categoryIdStr = categoryId.toString();
     int displayIndex = 0;
-    
-    for (int i = 0; i < _sortedCategories!.length; i++) {
-      final category = _sortedCategories![i];
+
+    for (final category in _sortedCategories) {
       final catIdStr = category['id'].toString();
-      final categoryItems = _itemsByCategory![catIdStr] ?? [];
-      
-      // 商品が存在するカテゴリーのみカウント
-      if (categoryItems.isNotEmpty) {
-        if (catIdStr == categoryIdStr) {
-          return displayIndex;
-        }
-        displayIndex++;
+      final categoryItems = _itemsByCategory[catIdStr] ?? [];
+      if (categoryItems.isEmpty) {
+        continue;
       }
+      if (catIdStr == categoryIdStr) {
+        return displayIndex;
+      }
+      displayIndex++;
     }
     return null;
   }
 
-  /// カテゴリーIDで該当するカテゴリーの位置までスクロールする関数
-  ///
-  /// 画面外のカテゴリーでも確実にスクロールできるようにするため：
-  /// 1. contextが取得できる場合は、Scrollable.ensureVisibleを使用
-  /// 2. contextがnull（画面外で未ビルド）の場合は、段階的にスクロールして
-  ///    ビルドを促し、複数回試行して確実にcontextを取得
+  /// 指定したカテゴリー位置へスクロール
   void _scrollToCategory(int categoryId) {
     final key = _categoryKeys[categoryId];
     if (key == null) return;
 
     final context = key.currentContext;
-    
-    // contextが取得できる場合（画面内に表示されている）
     if (context != null) {
-      Scrollable.ensureVisible(
-        context,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-        alignment: 0.0, // 一番上
-        alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
-      ).then((_) {
-        if (widget.onCategoryScrolled != null) {
-          widget.onCategoryScrolled!();
-        }
-      });
+      _ensureVisible(context).then((_) => _notifyScrollCompleted());
       return;
     }
 
-    // contextがnullの場合（画面外で未ビルド）
-    // 段階的にスクロールして、確実にビルドを促す
     _scrollToCategoryWithRetry(categoryId, key, 0);
   }
 
-  /// カテゴリーまで段階的にスクロールし、複数回試行して確実にcontextを取得
   void _scrollToCategoryWithRetry(
     int categoryId,
     GlobalKey key,
     int retryCount,
   ) {
-    if (widget.scrollController == null) return;
-    
-    const maxRetries = 8; // 最大試行回数を増やす
-    if (retryCount >= maxRetries) {
+    final controller = widget.scrollController;
+    if (controller == null) return;
+
+    if (retryCount >= _scrollMaxRetries) {
       debugPrint('カテゴリー（$categoryId）へのスクロールが失敗しました。');
-      if (widget.onCategoryScrolled != null) {
-        widget.onCategoryScrolled!();
-      }
+      _notifyScrollCompleted();
       return;
     }
 
-    // まず、既に測定済みの位置があるか確認
     if (_categoryPositions.containsKey(categoryId)) {
       final knownPosition = _categoryPositions[categoryId]!;
-      widget.scrollController!.animateTo(
-        knownPosition,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      ).then((_) {
-        // スクロール後、contextが取得できるか確認
-        Future.delayed(const Duration(milliseconds: 200), () {
-          final newContext = key.currentContext;
-          if (newContext != null) {
-            Scrollable.ensureVisible(
-              newContext,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              alignment: 0.0,
-              alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
-            ).then((_) {
-              if (widget.onCategoryScrolled != null) {
-                widget.onCategoryScrolled!();
-              }
-            });
-          } else {
-            // 位置が古い可能性があるので、再測定を試みる
-            _categoryPositions.remove(categoryId);
-            _scrollToCategoryWithRetry(categoryId, key, retryCount + 1);
-          }
-        });
-      });
+      controller
+          .animateTo(
+            knownPosition.clamp(
+              0.0,
+              controller.position.maxScrollExtent,
+            ),
+            duration: _scrollAnimationDuration,
+            curve: Curves.easeInOut,
+          )
+          .then((_) => _attemptContextEnsure(key, categoryId, retryCount));
       return;
     }
 
@@ -159,141 +210,88 @@ class _ItemListState extends ConsumerState<ItemList> {
       return;
     }
 
-    // より大きな推定値を使用し、試行回数に応じて段階的にスクロール
-    // 最初は上から、次は下から、というように両方向からアプローチ
-    final estimatedHeight = 1000.0; // より大きな推定値
-    double targetOffset;
-    
-    if (retryCount < 4) {
-      // 前半の試行：上から順にスクロール
-      targetOffset = (categoryIndex * estimatedHeight * 0.3 * (retryCount + 1)).clamp(
-        0.0,
-        widget.scrollController!.position.maxScrollExtent,
-      );
-    } else {
-      // 後半の試行：より大きなオフセットでスクロール
-      targetOffset = (categoryIndex * estimatedHeight * 0.5 + (retryCount - 3) * 500).clamp(
-        0.0,
-        widget.scrollController!.position.maxScrollExtent,
-      );
-    }
+    final targetOffset = _calculateTargetOffset(
+      categoryIndex,
+      retryCount,
+      controller,
+    );
 
-    widget.scrollController!.animateTo(
-      targetOffset,
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeOut,
-    ).then((_) {
-      // スクロール後、少し待ってからcontextが取得できるか再試行
-      Future.delayed(const Duration(milliseconds: 300), () {
-        final newContext = key.currentContext;
-        if (newContext != null) {
-          // contextが取得できたので、実際の位置を測定して保存
-          final RenderBox? renderBox =
-              newContext.findRenderObject() as RenderBox?;
-          if (renderBox != null) {
-            final position = renderBox.localToGlobal(Offset.zero);
-            final scrollPosition = widget.scrollController!.offset;
-            final actualPosition = scrollPosition + position.dy;
-            _categoryPositions[categoryId] = actualPosition;
-          }
+    controller
+        .animateTo(
+          targetOffset,
+          duration: _scrollAnimationDuration,
+          curve: Curves.easeOut,
+        )
+        .then((_) => _attemptContextEnsure(key, categoryId, retryCount));
+  }
 
-          // 正確な位置までスクロール
-          Scrollable.ensureVisible(
-            newContext,
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeInOut,
-            alignment: 0.0,
-            alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
-          ).then((_) {
-            if (widget.onCategoryScrolled != null) {
-              widget.onCategoryScrolled!();
-            }
-          });
-        } else {
-          // まだcontextが取得できない場合は、再試行
-          _scrollToCategoryWithRetry(categoryId, key, retryCount + 1);
-        }
-      });
+  void _attemptContextEnsure(
+    GlobalKey key,
+    int categoryId,
+    int retryCount,
+  ) {
+    Future.delayed(_scrollRetryDelay, () {
+      final context = key.currentContext;
+      if (context != null) {
+        _recordCategoryPosition(key, categoryId);
+        _ensureVisible(context).then((_) => _notifyScrollCompleted());
+      } else {
+        _scrollToCategoryWithRetry(categoryId, key, retryCount + 1);
+      }
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final categoriesAsync = ref.watch(categoriesProvider);
-
-    // FutureBuilder的にAsyncValueを分岐して使う
-    return categoriesAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text('カテゴリー取得失敗: $error')),
-      data: (categories) {
-        // 商品をカテゴリーごとにグループ化: Map<category_id, List<item>>
-        _itemsByCategory = {};
-        for (final item in widget.items) {
-          final cid = item['category_id']?.toString() ?? '0';
-          _itemsByCategory!.putIfAbsent(cid, () => []).add(item);
-        }
-
-        // カテゴリーorder順でソートしたカテゴリーリスト
-        _sortedCategories = List<Map<String, dynamic>>.from(categories);
-        _sortedCategories!.sort((a, b) {
-          final ao = int.tryParse(a['order'].toString()) ?? 9999;
-          final bo = int.tryParse(b['order'].toString()) ?? 9999;
-          return ao.compareTo(bo);
-        });
-
-        // 各カテゴリーのキーを初期化
-        for (final category in _sortedCategories!) {
-          final categoryId = int.tryParse(category['id'].toString());
-          if (categoryId != null && !_categoryKeys.containsKey(categoryId)) {
-            _categoryKeys[categoryId] = GlobalKey();
-          }
-        }
-
-        // 表示用: 各カテゴリーのセクション(header＋商品リスト)
-        return ListView.separated(
-          controller: widget.scrollController,
-          physics: const AlwaysScrollableScrollPhysics(),
-          itemCount: _sortedCategories!.length,
-          separatorBuilder: (context, index) => const Divider(
-            height: 0,
-            thickness: 2,
-            indent: 0,
-            endIndent: 0,
-            color: Colors.grey,
-          ),
-          itemBuilder: (context, catIndex) {
-            final category = _sortedCategories![catIndex];
-            final categoryIdStr = category['id'].toString();
-            final categoryId = int.tryParse(categoryIdStr);
-            final categoryName = category['name']?.toString() ?? '未分類';
-            final categoryItems = _itemsByCategory![categoryIdStr] ?? [];
-
-            if (categoryItems.isEmpty) {
-              // このカテゴリに商品が無ければセクションをスキップ
-              return const SizedBox.shrink();
-            }
-            return _CategorySectionWrapper(
-              key: categoryId != null ? _categoryKeys[categoryId] : null,
-              categoryId: categoryId,
-              categoryName: categoryName,
-              categoryItems: categoryItems,
-              onPositionMeasured: categoryId != null && widget.scrollController != null
-                  ? (position) {
-                      // カテゴリーの位置を測定して保存
-                      _categoryPositions[categoryId] = position;
-                    }
-                  : null,
-              scrollController: widget.scrollController,
-            );
-          },
-        );
-      },
+  Future<void> _ensureVisible(BuildContext context) {
+    return Scrollable.ensureVisible(
+      context,
+      duration: _scrollAnimationDuration,
+      curve: Curves.easeInOut,
+      alignment: 0.0,
+      alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
     );
+  }
+
+  void _recordCategoryPosition(GlobalKey key, int categoryId) {
+    final controller = widget.scrollController;
+    if (controller == null) return;
+
+    final context = key.currentContext;
+    final renderBox = context?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+
+    final position = renderBox.localToGlobal(Offset.zero);
+    final actualPosition = controller.offset + position.dy;
+    _categoryPositions[categoryId] = actualPosition;
+  }
+
+  double _calculateTargetOffset(
+    int categoryIndex,
+    int retryCount,
+    ScrollController controller,
+  ) {
+    const estimatedHeight = 1000.0;
+    double targetOffset;
+
+    if (retryCount < 4) {
+      targetOffset = categoryIndex * estimatedHeight * 0.3 * (retryCount + 1);
+    } else {
+      targetOffset =
+          categoryIndex * estimatedHeight * 0.5 + (retryCount - 3) * 500;
+    }
+
+    return targetOffset.clamp(
+      0.0,
+      controller.position.maxScrollExtent,
+    );
+  }
+
+  void _notifyScrollCompleted() {
+    widget.onCategoryScrolled?.call();
   }
 }
 
 /// カテゴリーセクションのラッパー（位置測定機能付き）
-class _CategorySectionWrapper extends StatefulWidget {
+class ItemCategorySection extends StatefulWidget {
   final Key? key;
   final int? categoryId;
   final String categoryName;
@@ -301,7 +299,7 @@ class _CategorySectionWrapper extends StatefulWidget {
   final Function(double)? onPositionMeasured;
   final ScrollController? scrollController;
 
-  const _CategorySectionWrapper({
+  const ItemCategorySection({
     this.key,
     this.categoryId,
     required this.categoryName,
@@ -311,26 +309,20 @@ class _CategorySectionWrapper extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<_CategorySectionWrapper> createState() => _CategorySectionWrapperState();
+  State<ItemCategorySection> createState() => _ItemCategorySectionState();
 }
 
-class _CategorySectionWrapperState extends State<_CategorySectionWrapper> {
+class _ItemCategorySectionState extends State<ItemCategorySection> {
   @override
   void initState() {
     super.initState();
-    // ビルド後に位置を測定
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _measurePosition();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measurePosition());
   }
 
   @override
-  void didUpdateWidget(_CategorySectionWrapper oldWidget) {
+  void didUpdateWidget(ItemCategorySection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // ウィジェットが更新されたら位置を再測定
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _measurePosition();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measurePosition());
   }
 
   void _measurePosition() {
@@ -340,38 +332,36 @@ class _CategorySectionWrapperState extends State<_CategorySectionWrapper> {
       return;
     }
 
-    // keyがGlobalKeyの場合のみcontextを取得
     final globalKey = widget.key is GlobalKey ? widget.key as GlobalKey : null;
     final context = globalKey?.currentContext;
-    if (context != null) {
-      final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
-      if (renderBox != null) {
-        final position = renderBox.localToGlobal(Offset.zero);
-        final scrollPosition = widget.scrollController!.offset;
-        final actualPosition = scrollPosition + position.dy;
-        widget.onPositionMeasured!(actualPosition);
-      }
-    }
+    if (context == null) return;
+
+    final renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+
+    final position = renderBox.localToGlobal(Offset.zero);
+    final scrollPosition = widget.scrollController!.offset;
+    final actualPosition = scrollPosition + position.dy;
+    widget.onPositionMeasured!(actualPosition);
   }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
+      padding: const EdgeInsets.only(bottom: _categoryBottomSpacing),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // カテゴリー名
           Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 12,
+              horizontal: _categoryHeaderPaddingHorizontal,
+              vertical: _categoryHeaderPaddingVertical,
             ),
             child: Text(
               widget.categoryName,
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 18,
+                fontSize: _categoryTitleFontSize,
                 color: Colors.blueGrey,
               ),
             ),
@@ -416,7 +406,10 @@ class ItemCard extends ConsumerWidget {
         Opacity(
           opacity: isSoldOut ? 0.6 : 1.0,
           child: Card(
-            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            margin: const EdgeInsets.symmetric(
+              vertical: _itemCardMarginVertical,
+              horizontal: _itemCardMarginHorizontal,
+            ),
             elevation: 3,
             child: InkWell(
               borderRadius: BorderRadius.circular(4),
@@ -430,7 +423,8 @@ class ItemCard extends ConsumerWidget {
                         imageUrl,
                         price,
                         description,
-                        stock,
+                            stock,
+                            isSoldOut,
                       ),
               child: Padding(
                 padding: const EdgeInsets.all(10.0),
@@ -495,14 +489,6 @@ class ItemCard extends ConsumerWidget {
     );
   }
 
-  void _changeQuantity({
-    required ValueNotifier<int> quantityNotifier,
-    required int delta,
-    required int stock,
-  }) {
-    quantityNotifier.value = (quantityNotifier.value + delta).clamp(1, stock);
-  }
-
   /// 商品拡大表示ダイアログを表示（数量指定対応版）
   void _showItemDetailDialog(
     BuildContext context,
@@ -513,335 +499,20 @@ class ItemCard extends ConsumerWidget {
     String? price,
     String? description,
     String? stock,
+    bool isSoldOut,
   ) {
-    // ダイアログで使う数量管理用 ValueNotifier
-    final quantityNotifier = ValueNotifier<int>(1);
-    final int maxStock = (item['quantity'] is int)
-        ? item['quantity']
-        : int.tryParse(item['quantity'].toString()) ?? 0;
-
-    final bool isSoldOut = maxStock == 0;
-
     showDialog(
       context: context,
-      builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: Material(
-                borderRadius: BorderRadius.circular(16),
-                clipBehavior: Clip.antiAlias,
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: StatefulBuilder(
-                    builder: (context, setState) {
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // 拡大画像
-                          if (imageUrl != null)
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                imageUrl,
-                                fit: BoxFit.contain,
-                                height: 180,
-                                errorBuilder: (_, __, ___) =>
-                                    const Icon(Icons.image),
-                              ),
-                            ),
-                          const SizedBox(height: 16),
-                          // 商品名
-                          Text(
-                            name,
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          // 価格
-                          if (price != null)
-                            Text(
-                              price,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                color: Colors.cyan,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          // 在庫数
-                          if (stock != null)
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                top: 6.0,
-                                bottom: 6.0,
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.inventory_2,
-                                    size: 18,
-                                    color: Colors.grey,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    isSoldOut ? "売り切れ" : stock,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: isSoldOut ? Colors.red : Colors.green,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          const SizedBox(height: 8),
-                          // 商品説明
-                          if (description != null &&
-                              description.trim().isNotEmpty)
-                            Text(
-                              description,
-                              style: const TextStyle(
-                                fontSize: 15,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          const SizedBox(height: 20),
-
-                          Row(
-                            children: [
-                              const Text('選択数: '),
-                              GestureDetector(
-                                onLongPressStart: (!isSoldOut && quantityNotifier.value > 1)
-                                    ? (_) {
-                                        startLongPressRepeater(() {
-                                          if (quantityNotifier.value > 1) {
-                                            setState(() {
-                                              _changeQuantity(
-                                                quantityNotifier:
-                                                    quantityNotifier,
-                                                delta: -1,
-                                                stock: maxStock,
-                                              );
-                                            });
-                                          }
-                                        });
-                                      }
-                                    : null,
-                                onLongPressEnd: (_) => stopLongPressRepeater(),
-                                child: IconButton(
-                                  icon: const Icon(Icons.remove_circle_outline),
-                                  onPressed: (!isSoldOut && quantityNotifier.value > 1)
-                                      ? () {
-                                          setState(() {
-                                            _changeQuantity(
-                                              quantityNotifier:
-                                                  quantityNotifier,
-                                              delta: -1,
-                                              stock: maxStock,
-                                            );
-                                          });
-                                        }
-                                      : null,
-                                ),
-                              ),
-                              ValueListenableBuilder<int>(
-                                valueListenable: quantityNotifier,
-                                builder: (context, value, _) {
-                                  return Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        '$value',
-                                        style: const TextStyle(fontSize: 16),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              ),
-                              GestureDetector(
-                                onLongPressStart:
-                                    (!isSoldOut && quantityNotifier.value < maxStock)
-                                    ? (_) {
-                                        startLongPressRepeater(() {
-                                          if (quantityNotifier.value <
-                                              maxStock) {
-                                            setState(() {
-                                              _changeQuantity(
-                                                quantityNotifier:
-                                                    quantityNotifier,
-                                                delta: 1,
-                                                stock: maxStock,
-                                              );
-                                            });
-                                          }
-                                        });
-                                      }
-                                    : null,
-                                onLongPressEnd: (_) => stopLongPressRepeater(),
-                                child: IconButton(
-                                  icon: const Icon(Icons.add_circle_outline),
-                                  onPressed: (!isSoldOut && quantityNotifier.value < maxStock)
-                                      ? () {
-                                          setState(() {
-                                            _changeQuantity(
-                                              quantityNotifier:
-                                                  quantityNotifier,
-                                              delta: 1,
-                                              stock: maxStock,
-                                            );
-                                          });
-                                        }
-                                      : null,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-
-                          // カートへ追加ボタン
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Consumer(
-                              builder: (context, ref, _) {
-                                return ElevatedButton.icon(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        isSoldOut ? Colors.grey : Colors.orange,
-                                    foregroundColor: Colors.white,
-                                  ),
-                                  icon: const Icon(
-                                    Icons.shopping_cart_outlined,
-                                  ),
-                                  label: Text(isSoldOut ? '売り切れ' : 'カートへ追加'),
-                                  onPressed: isSoldOut
-                                      ? null
-                                      : () {
-                                          final quantityToAdd = quantityNotifier.value;
-                                          if (maxStock != 0 &&
-                                              quantityToAdd > maxStock) {
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              const SnackBar(
-                                                content: Text('在庫数を超えています'),
-                                              ),
-                                            );
-                                            return;
-                                          }
-
-                                          // ここでcartItemsProviderへ追加
-                                          final cartItem = CartItemModel(
-                                            id: item['id'] is int
-                                                ? item['id']
-                                                : int.tryParse(
-                                                        item['id'].toString(),
-                                                      ) ??
-                                                    0,
-                                            name: item['name'] ?? "",
-                                            price: item['price'] is int
-                                                ? item['price']
-                                                : int.tryParse(
-                                                        item['price'].toString(),
-                                                      ) ??
-                                                    0,
-                                            stock: item['quantity'] is int
-                                                ? item['quantity']
-                                                : int.tryParse(
-                                                        item['quantity']
-                                                            .toString(),
-                                                      ) ??
-                                                    0,
-                                            quantity: quantityToAdd,
-                                            image_url: item['image_url']?.toString() ?? "",
-                                          );
-
-                                          final cartItems = ref.read(
-                                            cartItemsProvider,
-                                          );
-
-                                          // 既に同じidの商品があればquantityだけ増やす
-                                          final existingIndex =
-                                              cartItems.indexWhere(
-                                            (ci) => ci.id == cartItem.id,
-                                          );
-                                          if (existingIndex != -1) {
-                                            final updatedCartItems = [...cartItems];
-                                            final existingItem =
-                                                updatedCartItems[existingIndex];
-                                            final newQuantity =
-                                                existingItem.quantity +
-                                                    quantityToAdd;
-                                            // 在庫超えるかどうかチェック
-                                            if (maxStock != 0 &&
-                                                newQuantity > maxStock) {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    'カートにすでに ${existingItem.quantity} 個あり、合わせると在庫数 $maxStock を超える数量です',
-                                                  ),
-                                                ),
-                                              );
-                                              return;
-                                            }
-                                            updatedCartItems[existingIndex] =
-                                                existingItem.copyWith(
-                                              quantity: newQuantity,
-                                            );
-                                            ref
-                                                .read(
-                                                    cartItemsProvider.notifier)
-                                                .state = updatedCartItems;
-                                          } else {
-                                            ref
-                                                .read(
-                                                    cartItemsProvider.notifier)
-                                                .state = [
-                                              ...cartItems,
-                                              cartItem,
-                                            ];
-                                          }
-
-                                          Navigator.of(context).pop();
-
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                'カートに${quantityToAdd}個追加しました',
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                );
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          // 閉じるボタン
-                          Align(
-                            alignment: Alignment.bottomRight,
-                            child: TextButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: const Text('閉じる'),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
+      builder: (context) => ItemDetailDialog(
+        ref: ref,
+        item: item,
+        name: name,
+        imageUrl: imageUrl,
+        price: price,
+        description: description,
+        stockLabel: stock,
+        isSoldOut: isSoldOut,
+      ),
     );
   }
 
@@ -982,8 +653,8 @@ class ItemImage extends StatelessWidget {
         ClipRRect(
           borderRadius: BorderRadius.circular(6),
           child: Container(
-            width: 56,
-            height: 56,
+            width: _itemImageSize,
+            height: _itemImageSize,
             color: Colors.grey[300],
             child: FittedBox(
               fit: BoxFit.contain,
@@ -1008,6 +679,298 @@ class ItemImage extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+// ============================================================================
+// 商品詳細ダイアログ
+// ============================================================================
+
+class ItemDetailDialog extends StatefulWidget {
+  final WidgetRef ref;
+  final dynamic item;
+  final String name;
+  final String? imageUrl;
+  final String? price;
+  final String? description;
+  final String? stockLabel;
+  final bool isSoldOut;
+
+  const ItemDetailDialog({
+    super.key,
+    required this.ref,
+    required this.item,
+    required this.name,
+    this.imageUrl,
+    this.price,
+    this.description,
+    this.stockLabel,
+    this.isSoldOut = false,
+  });
+
+  @override
+  State<ItemDetailDialog> createState() => _ItemDetailDialogState();
+}
+
+class _ItemDetailDialogState extends State<ItemDetailDialog> {
+  late final ValueNotifier<int> _quantityNotifier;
+  late final int _maxStock;
+
+  bool get _isSoldOut => widget.isSoldOut || _maxStock == 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _quantityNotifier = ValueNotifier<int>(1);
+    _maxStock = widget.item['quantity'] is int
+        ? widget.item['quantity']
+        : int.tryParse(widget.item['quantity'].toString()) ?? 0;
+  }
+
+  @override
+  void dispose() {
+    _quantityNotifier.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: Material(
+            borderRadius: BorderRadius.circular(16),
+            clipBehavior: Clip.antiAlias,
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (widget.imageUrl != null) _buildHeroImage(),
+                  const SizedBox(height: 16),
+                  _buildHeader(),
+                  const SizedBox(height: 8),
+                  if (widget.description != null &&
+                      widget.description!.trim().isNotEmpty)
+                    _buildDescription(),
+                  const SizedBox(height: 20),
+                  _buildQuantitySelector(),
+                  const SizedBox(height: 12),
+                  _buildAddToCartButton(),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('閉じる'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeroImage() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Image.network(
+        widget.imageUrl!,
+        fit: BoxFit.contain,
+        height: 180,
+        errorBuilder: (_, __, ___) => const Icon(Icons.image),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.name,
+          style: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (widget.price != null)
+          Text(
+            widget.price!,
+            style: const TextStyle(
+              fontSize: 18,
+              color: Colors.cyan,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        if (widget.stockLabel != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6.0),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.inventory_2,
+                  size: 18,
+                  color: Colors.grey,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  _isSoldOut ? '売り切れ' : widget.stockLabel!,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: _isSoldOut ? Colors.red : Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildDescription() {
+    return Text(
+      widget.description!,
+      style: const TextStyle(
+        fontSize: 15,
+        color: Colors.black87,
+      ),
+    );
+  }
+
+  Widget _buildQuantitySelector() {
+    return Row(
+      children: [
+        const Text('選択数: '),
+        _buildQuantityButton(
+          icon: Icons.remove_circle_outline,
+          enabled: !_isSoldOut && _quantityNotifier.value > 1,
+          onPressed: () => _updateQuantity(-1),
+        ),
+        ValueListenableBuilder<int>(
+          valueListenable: _quantityNotifier,
+          builder: (context, value, _) => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Text(
+              '$value',
+              style: const TextStyle(fontSize: 16),
+            ),
+          ),
+        ),
+        _buildQuantityButton(
+          icon: Icons.add_circle_outline,
+          enabled: !_isSoldOut && _quantityNotifier.value < _maxStock,
+          onPressed: () => _updateQuantity(1),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuantityButton({
+    required IconData icon,
+    required bool enabled,
+    required VoidCallback onPressed,
+  }) {
+    return GestureDetector(
+      onLongPressStart: enabled
+          ? (_) {
+              startLongPressRepeater(() {
+                onPressed();
+              });
+            }
+          : null,
+      onLongPressEnd: (_) => stopLongPressRepeater(),
+      child: IconButton(
+        icon: Icon(icon),
+        onPressed: enabled ? onPressed : null,
+      ),
+    );
+  }
+
+  Widget _buildAddToCartButton() {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _isSoldOut ? Colors.grey : Colors.orange,
+          foregroundColor: Colors.white,
+        ),
+        icon: const Icon(Icons.shopping_cart_outlined),
+        label: Text(_isSoldOut ? '売り切れ' : 'カートへ追加'),
+        onPressed: _isSoldOut ? null : _handleAddToCart,
+      ),
+    );
+  }
+
+  void _updateQuantity(int delta) {
+    _quantityNotifier.value =
+        (_quantityNotifier.value + delta).clamp(1, _maxStock);
+    setState(() {});
+  }
+
+  void _handleAddToCart() {
+    final quantityToAdd = _quantityNotifier.value;
+    if (_maxStock != 0 && quantityToAdd > _maxStock) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('在庫数を超えています')),
+      );
+      return;
+    }
+
+    final cartItem = CartItemModel(
+      id: widget.item['id'] is int
+          ? widget.item['id']
+          : int.tryParse(widget.item['id'].toString()) ?? 0,
+      name: widget.item['name'] ?? '',
+      price: widget.item['price'] is int
+          ? widget.item['price']
+          : int.tryParse(widget.item['price'].toString()) ?? 0,
+      stock: widget.item['quantity'] is int
+          ? widget.item['quantity']
+          : int.tryParse(widget.item['quantity'].toString()) ?? 0,
+      quantity: quantityToAdd,
+      image_url: widget.item['image_url']?.toString() ?? '',
+    );
+
+    final cartItems = widget.ref.read(cartItemsProvider);
+    final existingIndex = cartItems.indexWhere((ci) => ci.id == cartItem.id);
+
+    if (existingIndex != -1) {
+      final updatedCartItems = [...cartItems];
+      final existingItem = updatedCartItems[existingIndex];
+      final newQuantity = existingItem.quantity + quantityToAdd;
+      if (_maxStock != 0 && newQuantity > _maxStock) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'カートにすでに ${existingItem.quantity} 個あり、合わせると在庫数 $_maxStock を超える数量です',
+            ),
+          ),
+        );
+        return;
+      }
+      updatedCartItems[existingIndex] =
+          existingItem.copyWith(quantity: newQuantity);
+      widget.ref.read(cartItemsProvider.notifier).state = updatedCartItems;
+    } else {
+      widget.ref.read(cartItemsProvider.notifier).state = [
+        ...cartItems,
+        cartItem,
+      ];
+    }
+
+    Navigator.of(context).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('カートに${quantityToAdd}個追加しました')),
     );
   }
 }

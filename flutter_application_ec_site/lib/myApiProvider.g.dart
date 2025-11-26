@@ -8,9 +8,18 @@ part of 'myApiProvider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// カテゴリー一覧を取得するProvider
+///
+/// サーバーからカテゴリーのリストを取得します。
+/// 戻り値: カテゴリー情報のリスト
 
 @ProviderFor(categories)
 const categoriesProvider = CategoriesProvider._();
+
+/// カテゴリー一覧を取得するProvider
+///
+/// サーバーからカテゴリーのリストを取得します。
+/// 戻り値: カテゴリー情報のリスト
 
 final class CategoriesProvider
     extends
@@ -20,6 +29,10 @@ final class CategoriesProvider
           FutureOr<List<dynamic>>
         >
     with $FutureModifier<List<dynamic>>, $FutureProvider<List<dynamic>> {
+  /// カテゴリー一覧を取得するProvider
+  ///
+  /// サーバーからカテゴリーのリストを取得します。
+  /// 戻り値: カテゴリー情報のリスト
   const CategoriesProvider._()
     : super(
         from: null,
@@ -46,10 +59,20 @@ final class CategoriesProvider
   }
 }
 
-String _$categoriesHash() => r'0c6b9c558451e79adc306b4e99b8c9b87eb6583a';
+String _$categoriesHash() => r'5aaf292782a83131410a3e24d01619cd61ab5612';
+
+/// 商品一覧を取得するProvider
+///
+/// サーバーから商品のリストを取得します。
+/// 戻り値: 商品情報のリスト
 
 @ProviderFor(items)
 const itemsProvider = ItemsProvider._();
+
+/// 商品一覧を取得するProvider
+///
+/// サーバーから商品のリストを取得します。
+/// 戻り値: 商品情報のリスト
 
 final class ItemsProvider
     extends
@@ -59,6 +82,10 @@ final class ItemsProvider
           FutureOr<List<dynamic>>
         >
     with $FutureModifier<List<dynamic>>, $FutureProvider<List<dynamic>> {
+  /// 商品一覧を取得するProvider
+  ///
+  /// サーバーから商品のリストを取得します。
+  /// 戻り値: 商品情報のリスト
   const ItemsProvider._()
     : super(
         from: null,
@@ -85,14 +112,34 @@ final class ItemsProvider
   }
 }
 
-String _$itemsHash() => r'cdc3f4926a2e28d9dc7af99d33cbc49f1e4d6ca6';
+String _$itemsHash() => r'064e1f33fc6cace5bd5411948e2521c372577fb3';
+
+/// ユーザーログインを実行するProvider
+///
+/// [email]: ユーザーのメールアドレス
+/// [password]: ユーザーのパスワード
+///
+/// 戻り値: ログイン成功時のユーザー情報
 
 @ProviderFor(login)
 const loginProvider = LoginFamily._();
 
+/// ユーザーログインを実行するProvider
+///
+/// [email]: ユーザーのメールアドレス
+/// [password]: ユーザーのパスワード
+///
+/// 戻り値: ログイン成功時のユーザー情報
+
 final class LoginProvider
     extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
     with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+  /// ユーザーログインを実行するProvider
+  ///
+  /// [email]: ユーザーのメールアドレス
+  /// [password]: ユーザーのパスワード
+  ///
+  /// 戻り値: ログイン成功時のユーザー情報
   const LoginProvider._({
     required LoginFamily super.from,
     required ({String email, String password}) super.argument,
@@ -136,7 +183,14 @@ final class LoginProvider
   }
 }
 
-String _$loginHash() => r'f77d259994fb006592797a0d76db42dc90f39b7b';
+String _$loginHash() => r'be4c4c8bf5c2bcddc2966683f386ea870f9e8e21';
+
+/// ユーザーログインを実行するProvider
+///
+/// [email]: ユーザーのメールアドレス
+/// [password]: ユーザーのパスワード
+///
+/// 戻り値: ログイン成功時のユーザー情報
 
 final class LoginFamily extends $Family
     with
@@ -153,6 +207,13 @@ final class LoginFamily extends $Family
         isAutoDispose: true,
       );
 
+  /// ユーザーログインを実行するProvider
+  ///
+  /// [email]: ユーザーのメールアドレス
+  /// [password]: ユーザーのパスワード
+  ///
+  /// 戻り値: ログイン成功時のユーザー情報
+
   LoginProvider call({required String email, required String password}) =>
       LoginProvider._(argument: (email: email, password: password), from: this);
 
@@ -160,12 +221,38 @@ final class LoginFamily extends $Family
   String toString() => r'loginProvider';
 }
 
+/// 購入処理を実行するProvider
+///
+/// [userId]: 購入するユーザーのID
+/// [paymentId]: 支払い方法のID
+/// [itemIds]: 購入する商品のIDリスト
+/// [quantities]: 各商品の数量リスト（itemIdsと順序が一致している必要がある）
+///
+/// 戻り値: 購入処理の結果
+
 @ProviderFor(purchase)
 const purchaseProvider = PurchaseFamily._();
+
+/// 購入処理を実行するProvider
+///
+/// [userId]: 購入するユーザーのID
+/// [paymentId]: 支払い方法のID
+/// [itemIds]: 購入する商品のIDリスト
+/// [quantities]: 各商品の数量リスト（itemIdsと順序が一致している必要がある）
+///
+/// 戻り値: 購入処理の結果
 
 final class PurchaseProvider
     extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
     with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+  /// 購入処理を実行するProvider
+  ///
+  /// [userId]: 購入するユーザーのID
+  /// [paymentId]: 支払い方法のID
+  /// [itemIds]: 購入する商品のIDリスト
+  /// [quantities]: 各商品の数量リスト（itemIdsと順序が一致している必要がある）
+  ///
+  /// 戻り値: 購入処理の結果
   const PurchaseProvider._({
     required PurchaseFamily super.from,
     required (int, int, List<int>, List<int>) super.argument,
@@ -209,7 +296,16 @@ final class PurchaseProvider
   }
 }
 
-String _$purchaseHash() => r'a4e10ef16cca932e9bcfb97b755f86744b77b861';
+String _$purchaseHash() => r'04fc9669e96049cb50bfaf4214f98662d090beb5';
+
+/// 購入処理を実行するProvider
+///
+/// [userId]: 購入するユーザーのID
+/// [paymentId]: 支払い方法のID
+/// [itemIds]: 購入する商品のIDリスト
+/// [quantities]: 各商品の数量リスト（itemIdsと順序が一致している必要がある）
+///
+/// 戻り値: 購入処理の結果
 
 final class PurchaseFamily extends $Family
     with
@@ -226,6 +322,15 @@ final class PurchaseFamily extends $Family
         isAutoDispose: true,
       );
 
+  /// 購入処理を実行するProvider
+  ///
+  /// [userId]: 購入するユーザーのID
+  /// [paymentId]: 支払い方法のID
+  /// [itemIds]: 購入する商品のIDリスト
+  /// [quantities]: 各商品の数量リスト（itemIdsと順序が一致している必要がある）
+  ///
+  /// 戻り値: 購入処理の結果
+
   PurchaseProvider call(
     int userId,
     int paymentId,
@@ -240,8 +345,16 @@ final class PurchaseFamily extends $Family
   String toString() => r'purchaseProvider';
 }
 
+/// 支払い方法一覧を取得するProvider
+///
+/// 戻り値: 支払い方法情報のリスト
+
 @ProviderFor(payments)
 const paymentsProvider = PaymentsProvider._();
+
+/// 支払い方法一覧を取得するProvider
+///
+/// 戻り値: 支払い方法情報のリスト
 
 final class PaymentsProvider
     extends
@@ -251,6 +364,9 @@ final class PaymentsProvider
           FutureOr<List<dynamic>>
         >
     with $FutureModifier<List<dynamic>>, $FutureProvider<List<dynamic>> {
+  /// 支払い方法一覧を取得するProvider
+  ///
+  /// 戻り値: 支払い方法情報のリスト
   const PaymentsProvider._()
     : super(
         from: null,
@@ -277,10 +393,22 @@ final class PaymentsProvider
   }
 }
 
-String _$paymentsHash() => r'07a0090309cf8d7d7f7fd4a804c5b1cb698d30fa';
+String _$paymentsHash() => r'2f9007f8ffc40cdd29a90c390d44f887b2c028a8';
+
+/// 購入履歴を取得するProvider
+///
+/// [user_id]: 購入履歴を取得するユーザーのID
+///
+/// 戻り値: 購入履歴情報のリスト
 
 @ProviderFor(purchaseHistory)
 const purchaseHistoryProvider = PurchaseHistoryFamily._();
+
+/// 購入履歴を取得するProvider
+///
+/// [user_id]: 購入履歴を取得するユーザーのID
+///
+/// 戻り値: 購入履歴情報のリスト
 
 final class PurchaseHistoryProvider
     extends
@@ -290,6 +418,11 @@ final class PurchaseHistoryProvider
           FutureOr<List<dynamic>>
         >
     with $FutureModifier<List<dynamic>>, $FutureProvider<List<dynamic>> {
+  /// 購入履歴を取得するProvider
+  ///
+  /// [user_id]: 購入履歴を取得するユーザーのID
+  ///
+  /// 戻り値: 購入履歴情報のリスト
   const PurchaseHistoryProvider._({
     required PurchaseHistoryFamily super.from,
     required int super.argument,
@@ -334,7 +467,13 @@ final class PurchaseHistoryProvider
   }
 }
 
-String _$purchaseHistoryHash() => r'b42b308b443ceb9b6836af90719a381b68141937';
+String _$purchaseHistoryHash() => r'68732e9edbfafa3942978ac4a529761518539e7c';
+
+/// 購入履歴を取得するProvider
+///
+/// [user_id]: 購入履歴を取得するユーザーのID
+///
+/// 戻り値: 購入履歴情報のリスト
 
 final class PurchaseHistoryFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<dynamic>>, int> {
@@ -347,6 +486,12 @@ final class PurchaseHistoryFamily extends $Family
         isAutoDispose: true,
       );
 
+  /// 購入履歴を取得するProvider
+  ///
+  /// [user_id]: 購入履歴を取得するユーザーのID
+  ///
+  /// 戻り値: 購入履歴情報のリスト
+
   PurchaseHistoryProvider call(int user_id) =>
       PurchaseHistoryProvider._(argument: user_id, from: this);
 
@@ -354,12 +499,47 @@ final class PurchaseHistoryFamily extends $Family
   String toString() => r'purchaseHistoryProvider';
 }
 
+/// ユーザー情報を更新するProvider
+///
+/// [id]: 更新するユーザーのID
+/// [name]: ユーザー名
+/// [email]: メールアドレス
+/// [hashed_password]: ハッシュ化されたパスワード
+/// [tel]: 電話番号
+/// [prefecture_id]: 都道府県ID
+/// [address]: 住所
+///
+/// 戻り値: 更新処理の結果
+
 @ProviderFor(updateUser)
 const updateUserProvider = UpdateUserFamily._();
+
+/// ユーザー情報を更新するProvider
+///
+/// [id]: 更新するユーザーのID
+/// [name]: ユーザー名
+/// [email]: メールアドレス
+/// [hashed_password]: ハッシュ化されたパスワード
+/// [tel]: 電話番号
+/// [prefecture_id]: 都道府県ID
+/// [address]: 住所
+///
+/// 戻り値: 更新処理の結果
 
 final class UpdateUserProvider
     extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
     with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+  /// ユーザー情報を更新するProvider
+  ///
+  /// [id]: 更新するユーザーのID
+  /// [name]: ユーザー名
+  /// [email]: メールアドレス
+  /// [hashed_password]: ハッシュ化されたパスワード
+  /// [tel]: 電話番号
+  /// [prefecture_id]: 都道府県ID
+  /// [address]: 住所
+  ///
+  /// 戻り値: 更新処理の結果
   const UpdateUserProvider._({
     required UpdateUserFamily super.from,
     required ({
@@ -431,7 +611,19 @@ final class UpdateUserProvider
   }
 }
 
-String _$updateUserHash() => r'3fa73505a685513ecb3079497c76eab45b5714d1';
+String _$updateUserHash() => r'834443eec23a3f2d3d0745ea996c6a4fec6c704c';
+
+/// ユーザー情報を更新するProvider
+///
+/// [id]: 更新するユーザーのID
+/// [name]: ユーザー名
+/// [email]: メールアドレス
+/// [hashed_password]: ハッシュ化されたパスワード
+/// [tel]: 電話番号
+/// [prefecture_id]: 都道府県ID
+/// [address]: 住所
+///
+/// 戻り値: 更新処理の結果
 
 final class UpdateUserFamily extends $Family
     with
@@ -455,6 +647,18 @@ final class UpdateUserFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
+
+  /// ユーザー情報を更新するProvider
+  ///
+  /// [id]: 更新するユーザーのID
+  /// [name]: ユーザー名
+  /// [email]: メールアドレス
+  /// [hashed_password]: ハッシュ化されたパスワード
+  /// [tel]: 電話番号
+  /// [prefecture_id]: 都道府県ID
+  /// [address]: 住所
+  ///
+  /// 戻り値: 更新処理の結果
 
   UpdateUserProvider call({
     required int id,
@@ -481,12 +685,32 @@ final class UpdateUserFamily extends $Family
   String toString() => r'updateUserProvider';
 }
 
+/// パスワードを変更するProvider
+///
+/// [id]: パスワードを変更するユーザーのID
+/// [newPassword]: 新しいパスワード（ハッシュ化済み）
+///
+/// 戻り値: 変更処理の結果メッセージ
+
 @ProviderFor(changePassword)
 const changePasswordProvider = ChangePasswordFamily._();
+
+/// パスワードを変更するProvider
+///
+/// [id]: パスワードを変更するユーザーのID
+/// [newPassword]: 新しいパスワード（ハッシュ化済み）
+///
+/// 戻り値: 変更処理の結果メッセージ
 
 final class ChangePasswordProvider
     extends $FunctionalProvider<AsyncValue<String>, String, FutureOr<String>>
     with $FutureModifier<String>, $FutureProvider<String> {
+  /// パスワードを変更するProvider
+  ///
+  /// [id]: パスワードを変更するユーザーのID
+  /// [newPassword]: 新しいパスワード（ハッシュ化済み）
+  ///
+  /// 戻り値: 変更処理の結果メッセージ
   const ChangePasswordProvider._({
     required ChangePasswordFamily super.from,
     required ({int id, String newPassword}) super.argument,
@@ -534,7 +758,14 @@ final class ChangePasswordProvider
   }
 }
 
-String _$changePasswordHash() => r'bffdd128bf29f827bdca09646721abca0b7eb330';
+String _$changePasswordHash() => r'742a55dbde4b93d314f1a83e1b337d8c528ea7f5';
+
+/// パスワードを変更するProvider
+///
+/// [id]: パスワードを変更するユーザーのID
+/// [newPassword]: 新しいパスワード（ハッシュ化済み）
+///
+/// 戻り値: 変更処理の結果メッセージ
 
 final class ChangePasswordFamily extends $Family
     with
@@ -551,6 +782,13 @@ final class ChangePasswordFamily extends $Family
         isAutoDispose: true,
       );
 
+  /// パスワードを変更するProvider
+  ///
+  /// [id]: パスワードを変更するユーザーのID
+  /// [newPassword]: 新しいパスワード（ハッシュ化済み）
+  ///
+  /// 戻り値: 変更処理の結果メッセージ
+
   ChangePasswordProvider call({required int id, required String newPassword}) =>
       ChangePasswordProvider._(
         argument: (id: id, newPassword: newPassword),
@@ -561,8 +799,16 @@ final class ChangePasswordFamily extends $Family
   String toString() => r'changePasswordProvider';
 }
 
+/// 都道府県一覧を取得するProvider
+///
+/// 戻り値: 都道府県情報のリスト
+
 @ProviderFor(prefectures)
 const prefecturesProvider = PrefecturesProvider._();
+
+/// 都道府県一覧を取得するProvider
+///
+/// 戻り値: 都道府県情報のリスト
 
 final class PrefecturesProvider
     extends
@@ -572,6 +818,9 @@ final class PrefecturesProvider
           FutureOr<List<dynamic>>
         >
     with $FutureModifier<List<dynamic>>, $FutureProvider<List<dynamic>> {
+  /// 都道府県一覧を取得するProvider
+  ///
+  /// 戻り値: 都道府県情報のリスト
   const PrefecturesProvider._()
     : super(
         from: null,
@@ -598,4 +847,4 @@ final class PrefecturesProvider
   }
 }
 
-String _$prefecturesHash() => r'cd69b2351f196ec4ac095a957d564100572296fe';
+String _$prefecturesHash() => r'77946fdad91ab4e3db699a09d3c0ab25e3fc063f';
