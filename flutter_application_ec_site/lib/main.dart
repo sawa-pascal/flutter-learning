@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
     //
     // 解決方法の例（appBarThemeで明示指定する）:
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'S.A.アプリ',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.cyan),
         appBarTheme: const AppBarTheme(
