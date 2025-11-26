@@ -13,7 +13,7 @@ import 'myApiProvider.dart';
 // ============================================================================
 
 /// カテゴリー選択時のコールバック関数の型定義
-/// 
+///
 /// [categoryId]: 選択されたカテゴリーのID
 /// [categoryName]: 選択されたカテゴリーの名前
 typedef OnCategorySelected = void Function(int categoryId, String categoryName);
@@ -26,7 +26,8 @@ typedef OnCategorySelected = void Function(int categoryId, String categoryName);
 const double _drawerHeaderHeight = 100.0;
 
 /// ドロワーヘッダーの画像URL
-const String _drawerHeaderImageUrl = 'http://3.107.37.75/images/stationery.jpeg';
+const String _drawerHeaderImageUrl =
+    'http://3.107.37.75/images/stationery.jpeg';
 
 /// カテゴリーセクションのパディング
 const EdgeInsets _categorySectionPadding = EdgeInsets.symmetric(
@@ -51,7 +52,7 @@ const double _appBarElevation = 10.0;
 // ============================================================================
 
 /// サイドメニュー（Drawer）ウィジェット
-/// 
+///
 /// カテゴリー一覧を表示し、カテゴリー選択時にコールバックを実行します。
 class AppDrawer extends ConsumerWidget {
   /// カテゴリー選択時のコールバック
@@ -63,8 +64,8 @@ class AppDrawer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final categoriesAsync = ref.watch(categoriesProvider);
 
-    return Drawer(
-      child: SafeArea(
+    return SafeArea(
+      child: Drawer(
         child: ListView(
           children: [
             _buildDrawerHeader(),
@@ -96,10 +97,7 @@ class AppDrawer extends ConsumerWidget {
   Widget _buildCategorySection(BuildContext context) {
     return Padding(
       padding: _categorySectionPadding,
-      child: Text(
-        'カテゴリー',
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
+      child: Text('カテゴリー', style: Theme.of(context).textTheme.titleMedium),
     );
   }
 
@@ -140,17 +138,14 @@ class AppDrawer extends ConsumerWidget {
   /// カテゴリータップ時の処理
   void _handleCategoryTap(BuildContext context, Map<String, dynamic> cat) {
     Navigator.pop(context); // Drawerを閉じる
-    
+
     if (onCategorySelected != null && cat['id'] != null) {
       final categoryId = cat['id'] is int
           ? cat['id'] as int
           : int.tryParse(cat['id'].toString());
-      
+
       if (categoryId != null) {
-        onCategorySelected!(
-          categoryId,
-          cat['name'] ?? '',
-        );
+        onCategorySelected!(categoryId, cat['name'] ?? '');
       }
     }
   }
@@ -169,12 +164,12 @@ class AppDrawer extends ConsumerWidget {
 // ============================================================================
 
 /// アプリ共通のAppBarを生成する関数
-/// 
+///
 /// [context]: ビルドコンテキスト
 /// [title]: タイトル文字列
 /// [userModel]: ユーザー情報（ログイン済みの場合に利用）
 /// [onSearchPressed]: 検索ボタン押下時のコールバック（現在は未使用）
-/// 
+///
 /// 戻り値: 設定済みのAppBarウィジェット
 AppBar buildAppBar(
   BuildContext context,
@@ -219,7 +214,7 @@ class _AppBarTitle extends StatelessWidget {
 // ============================================================================
 
 /// ユーザー用アクション部分（ログイン状態で表示を切替）
-/// 
+///
 /// ログインしていない場合はログインボタンを表示し、
 /// ログイン済みの場合はメニューボタンを表示します。
 class _UserAction extends ConsumerWidget {
@@ -263,22 +258,10 @@ class _UserAction extends ConsumerWidget {
   /// メニューアイテムを構築
   List<PopupMenuItem<String>> _buildMenuItems() {
     return const [
-      PopupMenuItem<String>(
-        value: 'purchaseHistory',
-        child: Text('購入履歴'),
-      ),
-      PopupMenuItem<String>(
-        value: 'userSetting',
-        child: Text('ユーザー設定'),
-      ),
-      PopupMenuItem<String>(
-        value: 'changePassword',
-        child: Text('パスワード変更'),
-      ),
-      PopupMenuItem<String>(
-        value: 'logout',
-        child: Text('ログアウト'),
-      ),
+      PopupMenuItem<String>(value: 'purchaseHistory', child: Text('購入履歴')),
+      PopupMenuItem<String>(value: 'userSetting', child: Text('ユーザー設定')),
+      PopupMenuItem<String>(value: 'changePassword', child: Text('パスワード変更')),
+      PopupMenuItem<String>(value: 'logout', child: Text('ログアウト')),
     ];
   }
 
@@ -318,25 +301,26 @@ class _UserAction extends ConsumerWidget {
 
   /// 購入履歴画面へ遷移
   void _navigateToPurchaseHistory() {
-    Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute(
-        builder: (context) => const PurchaseHistory(),
-      ),
-    );
+    Navigator.of(
+      context,
+      rootNavigator: true,
+    ).push(MaterialPageRoute(builder: (context) => const PurchaseHistory()));
   }
 
   /// ユーザー設定画面へ遷移
   void _navigateToUserSetting() {
-    Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute(builder: (context) => const UserSetting()),
-    );
+    Navigator.of(
+      context,
+      rootNavigator: true,
+    ).push(MaterialPageRoute(builder: (context) => const UserSetting()));
   }
 
   /// パスワード変更画面へ遷移
   void _navigateToPasswordChange() {
-    Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute(builder: (context) => const PasswordChange()),
-    );
+    Navigator.of(
+      context,
+      rootNavigator: true,
+    ).push(MaterialPageRoute(builder: (context) => const PasswordChange()));
   }
 
   /// ログアウト確認ダイアログを表示
@@ -353,10 +337,7 @@ class _UserAction extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => _performLogout(ref),
-            child: const Text(
-              'ログアウト',
-              style: TextStyle(color: Colors.red),
-            ),
+            child: const Text('ログアウト', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -366,9 +347,9 @@ class _UserAction extends ConsumerWidget {
   /// ログアウト処理を実行
   void _performLogout(WidgetRef ref) {
     ref.read(userModelProvider.notifier).state = null;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('ログアウトしました')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('ログアウトしました')));
     Navigator.pop(context);
   }
 }
@@ -378,7 +359,7 @@ class _UserAction extends ConsumerWidget {
 // ============================================================================
 
 /// カートアイコンアクション（画面遷移ボタン）
-/// 
+///
 /// AppBarに表示されるカートアイコンボタンです。
 /// タップするとカート画面へ遷移します。
 class _CartAction extends StatelessWidget {

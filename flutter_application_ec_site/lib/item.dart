@@ -126,10 +126,6 @@ class _ItemListState extends ConsumerState<ItemList> {
     final categoryName = category['name']?.toString() ?? '未分類';
     final categoryItems = _itemsByCategory[categoryIdStr] ?? [];
 
-    if (categoryItems.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
     return ItemCategorySection(
       key: categoryId != null ? _categoryKeys[categoryId] : null,
       categoryId: categoryId,
@@ -193,10 +189,7 @@ class _ItemListState extends ConsumerState<ItemList> {
       final knownPosition = _categoryPositions[categoryId]!;
       controller
           .animateTo(
-            knownPosition.clamp(
-              0.0,
-              controller.position.maxScrollExtent,
-            ),
+            knownPosition.clamp(0.0, controller.position.maxScrollExtent),
             duration: _scrollAnimationDuration,
             curve: Curves.easeInOut,
           )
@@ -225,11 +218,7 @@ class _ItemListState extends ConsumerState<ItemList> {
         .then((_) => _attemptContextEnsure(key, categoryId, retryCount));
   }
 
-  void _attemptContextEnsure(
-    GlobalKey key,
-    int categoryId,
-    int retryCount,
-  ) {
+  void _attemptContextEnsure(GlobalKey key, int categoryId, int retryCount) {
     Future.delayed(_scrollRetryDelay, () {
       final context = key.currentContext;
       if (context != null) {
@@ -279,10 +268,7 @@ class _ItemListState extends ConsumerState<ItemList> {
           categoryIndex * estimatedHeight * 0.5 + (retryCount - 3) * 500;
     }
 
-    return targetOffset.clamp(
-      0.0,
-      controller.position.maxScrollExtent,
-    );
+    return targetOffset.clamp(0.0, controller.position.maxScrollExtent);
   }
 
   void _notifyScrollCompleted() {
@@ -366,14 +352,25 @@ class _ItemCategorySectionState extends State<ItemCategorySection> {
               ),
             ),
           ),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: widget.categoryItems.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 4),
-            itemBuilder: (context, index) =>
-                ItemCard(item: widget.categoryItems[index]),
-          ),
+
+          if (widget.categoryItems.isEmpty) ...{
+            Center(
+              child: Text(
+                '商品がありません',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          } else ...{
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: widget.categoryItems.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 4),
+              itemBuilder: (context, index) =>
+                  ItemCard(item: widget.categoryItems[index]),
+            ),
+          },
         ],
       ),
     );
@@ -416,16 +413,16 @@ class ItemCard extends ConsumerWidget {
               onTap: isSoldOut
                   ? null
                   : () => _showItemDetailDialog(
-                        context,
-                        ref,
-                        item,
-                        name,
-                        imageUrl,
-                        price,
-                        description,
-                            stock,
-                            isSoldOut,
-                      ),
+                      context,
+                      ref,
+                      item,
+                      name,
+                      imageUrl,
+                      price,
+                      description,
+                      stock,
+                      isSoldOut,
+                    ),
               child: Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: Row(
@@ -460,7 +457,10 @@ class ItemCard extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 24,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.red.withOpacity(0.90),
                     borderRadius: BorderRadius.circular(32),
@@ -556,9 +556,7 @@ class ItemCard extends ConsumerWidget {
       return '在庫数: $stockInt';
     }
     // パースできなかった場合はそのまま表示
-    return showSoldOut && (stock == "0" || stock == 0)
-        ? '売り切れ'
-        : '在庫数: $stock';
+    return showSoldOut && (stock == "0" || stock == 0) ? '売り切れ' : '在庫数: $stock';
   }
 }
 
@@ -606,7 +604,11 @@ class _ItemDetails extends StatelessWidget {
           const SizedBox(height: 6),
           Row(
             children: [
-              Icon(Icons.inventory_2, size: 16, color: isSoldOut ? Colors.red : Colors.grey),
+              Icon(
+                Icons.inventory_2,
+                size: 16,
+                color: isSoldOut ? Colors.red : Colors.grey,
+              ),
               const SizedBox(width: 4),
               Text(
                 isSoldOut ? '売り切れ' : stock!,
@@ -639,7 +641,8 @@ class ItemImage extends StatelessWidget {
   final String? imageUrl;
   final bool isSoldOut;
 
-  const ItemImage({Key? key, this.imageUrl, this.isSoldOut = false}) : super(key: key);
+  const ItemImage({Key? key, this.imageUrl, this.isSoldOut = false})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -796,10 +799,7 @@ class _ItemDetailDialogState extends State<ItemDetailDialog> {
       children: [
         Text(
           widget.name,
-          style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         if (widget.price != null)
@@ -816,11 +816,7 @@ class _ItemDetailDialogState extends State<ItemDetailDialog> {
             padding: const EdgeInsets.symmetric(vertical: 6.0),
             child: Row(
               children: [
-                const Icon(
-                  Icons.inventory_2,
-                  size: 18,
-                  color: Colors.grey,
-                ),
+                const Icon(Icons.inventory_2, size: 18, color: Colors.grey),
                 const SizedBox(width: 4),
                 Text(
                   _isSoldOut ? '売り切れ' : widget.stockLabel!,
@@ -840,10 +836,7 @@ class _ItemDetailDialogState extends State<ItemDetailDialog> {
   Widget _buildDescription() {
     return Text(
       widget.description!,
-      style: const TextStyle(
-        fontSize: 15,
-        color: Colors.black87,
-      ),
+      style: const TextStyle(fontSize: 15, color: Colors.black87),
     );
   }
 
@@ -860,10 +853,7 @@ class _ItemDetailDialogState extends State<ItemDetailDialog> {
           valueListenable: _quantityNotifier,
           builder: (context, value, _) => Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Text(
-              '$value',
-              style: const TextStyle(fontSize: 16),
-            ),
+            child: Text('$value', style: const TextStyle(fontSize: 16)),
           ),
         ),
         _buildQuantityButton(
@@ -912,17 +902,19 @@ class _ItemDetailDialogState extends State<ItemDetailDialog> {
   }
 
   void _updateQuantity(int delta) {
-    _quantityNotifier.value =
-        (_quantityNotifier.value + delta).clamp(1, _maxStock);
+    _quantityNotifier.value = (_quantityNotifier.value + delta).clamp(
+      1,
+      _maxStock,
+    );
     setState(() {});
   }
 
   void _handleAddToCart() {
     final quantityToAdd = _quantityNotifier.value;
     if (_maxStock != 0 && quantityToAdd > _maxStock) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('在庫数を超えています')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('在庫数を超えています')));
       return;
     }
 
@@ -958,8 +950,9 @@ class _ItemDetailDialogState extends State<ItemDetailDialog> {
         );
         return;
       }
-      updatedCartItems[existingIndex] =
-          existingItem.copyWith(quantity: newQuantity);
+      updatedCartItems[existingIndex] = existingItem.copyWith(
+        quantity: newQuantity,
+      );
       widget.ref.read(cartItemsProvider.notifier).state = updatedCartItems;
     } else {
       widget.ref.read(cartItemsProvider.notifier).state = [
@@ -969,8 +962,8 @@ class _ItemDetailDialogState extends State<ItemDetailDialog> {
     }
 
     Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('カートに${quantityToAdd}個追加しました')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('カートに${quantityToAdd}個追加しました')));
   }
 }
