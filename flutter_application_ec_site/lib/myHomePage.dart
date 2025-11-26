@@ -23,12 +23,16 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
   final TextEditingController _searchController = TextEditingController();
   // 自動フォーカスしないためFocusNodeを削除
   String _searchKeyword = '';
+  final ScrollController _scrollController = ScrollController();
+  int? _selectedCategoryId;
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -47,6 +51,14 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
     final userModel = ref.watch(userModelProvider);
 
     return Scaffold(
+      drawer: AppDrawer(
+        onCategorySelected: (categoryId, categoryName) {
+          setState(() {
+            _selectedCategoryId = categoryId;
+          });
+          // スクロールはItemList内で処理される
+        },
+      ),
       // アプリ共通のAppBar（appBar.dartのbuildAppBarを利用）
       appBar: buildAppBar(
         context,
@@ -102,9 +114,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
         decoration: InputDecoration(
           prefixIcon: const Icon(Icons.search),
           hintText: '商品名で検索',
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           suffixIcon: _searchKeyword.isEmpty
               ? null
               : IconButton(
@@ -151,7 +161,17 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
               : '該当する商品が見つかりませんでした';
           listChild = _buildMessageList(message);
         } else {
-          listChild = ItemList(items: filteredItems);
+          listChild = ItemList(
+            items: filteredItems,
+            scrollController: _scrollController,
+            selectedCategoryId: _selectedCategoryId,
+            onCategoryScrolled: () {
+              // スクロール完了後に選択状態をリセット
+              setState(() {
+                _selectedCategoryId = null;
+              });
+            },
+          );
         }
 
         return RefreshIndicator(
@@ -184,10 +204,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
         Padding(
           padding: const EdgeInsets.all(24.0),
           child: Center(
-            child: Text(
-              message,
-              style: const TextStyle(fontSize: 16),
-            ),
+            child: Text(message, style: const TextStyle(fontSize: 16)),
           ),
         ),
       ],

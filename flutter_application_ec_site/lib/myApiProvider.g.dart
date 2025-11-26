@@ -46,7 +46,7 @@ final class CategoriesProvider
   }
 }
 
-String _$categoriesHash() => r'a2448766e4cfa16e5bd5407e7a313a50df365553';
+String _$categoriesHash() => r'0c6b9c558451e79adc306b4e99b8c9b87eb6583a';
 
 @ProviderFor(items)
 const itemsProvider = ItemsProvider._();
@@ -85,7 +85,7 @@ final class ItemsProvider
   }
 }
 
-String _$itemsHash() => r'346f7a06e09dbc837b6d6c443b3a802cd65f9eea';
+String _$itemsHash() => r'cdc3f4926a2e28d9dc7af99d33cbc49f1e4d6ca6';
 
 @ProviderFor(login)
 const loginProvider = LoginFamily._();
@@ -136,7 +136,7 @@ final class LoginProvider
   }
 }
 
-String _$loginHash() => r'e974fac5b617f1d0c186802a8b67c50d7233f21f';
+String _$loginHash() => r'f77d259994fb006592797a0d76db42dc90f39b7b';
 
 final class LoginFamily extends $Family
     with
@@ -209,7 +209,7 @@ final class PurchaseProvider
   }
 }
 
-String _$purchaseHash() => r'fd25789944cb9e53eaa451b567321308794254ef';
+String _$purchaseHash() => r'a4e10ef16cca932e9bcfb97b755f86744b77b861';
 
 final class PurchaseFamily extends $Family
     with
@@ -244,8 +244,13 @@ final class PurchaseFamily extends $Family
 const paymentsProvider = PaymentsProvider._();
 
 final class PaymentsProvider
-    extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
-    with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<dynamic>>,
+          List<dynamic>,
+          FutureOr<List<dynamic>>
+        >
+    with $FutureModifier<List<dynamic>>, $FutureProvider<List<dynamic>> {
   const PaymentsProvider._()
     : super(
         from: null,
@@ -262,23 +267,29 @@ final class PaymentsProvider
 
   @$internal
   @override
-  $FutureProviderElement<dynamic> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+  $FutureProviderElement<List<dynamic>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<dynamic> create(Ref ref) {
+  FutureOr<List<dynamic>> create(Ref ref) {
     return payments(ref);
   }
 }
 
-String _$paymentsHash() => r'0faa7d29a64ffb0cef8fd6e086de0f341c96a0f6';
+String _$paymentsHash() => r'07a0090309cf8d7d7f7fd4a804c5b1cb698d30fa';
 
 @ProviderFor(purchaseHistory)
 const purchaseHistoryProvider = PurchaseHistoryFamily._();
 
 final class PurchaseHistoryProvider
-    extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
-    with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<dynamic>>,
+          List<dynamic>,
+          FutureOr<List<dynamic>>
+        >
+    with $FutureModifier<List<dynamic>>, $FutureProvider<List<dynamic>> {
   const PurchaseHistoryProvider._({
     required PurchaseHistoryFamily super.from,
     required int super.argument,
@@ -302,11 +313,12 @@ final class PurchaseHistoryProvider
 
   @$internal
   @override
-  $FutureProviderElement<dynamic> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+  $FutureProviderElement<List<dynamic>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<dynamic> create(Ref ref) {
+  FutureOr<List<dynamic>> create(Ref ref) {
     final argument = this.argument as int;
     return purchaseHistory(ref, argument);
   }
@@ -322,10 +334,10 @@ final class PurchaseHistoryProvider
   }
 }
 
-String _$purchaseHistoryHash() => r'83c120b0e532fe2c73c4c47810bf54ff7e07321f';
+String _$purchaseHistoryHash() => r'b42b308b443ceb9b6836af90719a381b68141937';
 
 final class PurchaseHistoryFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<dynamic>, int> {
+    with $FunctionalFamilyOverride<FutureOr<List<dynamic>>, int> {
   const PurchaseHistoryFamily._()
     : super(
         retry: null,
@@ -419,7 +431,7 @@ final class UpdateUserProvider
   }
 }
 
-String _$updateUserHash() => r'c8a2dacdcd16dd3fba63eff9e6fcb95ae3db0fbd';
+String _$updateUserHash() => r'3fa73505a685513ecb3079497c76eab45b5714d1';
 
 final class UpdateUserFamily extends $Family
     with
@@ -473,8 +485,8 @@ final class UpdateUserFamily extends $Family
 const changePasswordProvider = ChangePasswordFamily._();
 
 final class ChangePasswordProvider
-    extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
-    with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+    extends $FunctionalProvider<AsyncValue<String>, String, FutureOr<String>>
+    with $FutureModifier<String>, $FutureProvider<String> {
   const ChangePasswordProvider._({
     required ChangePasswordFamily super.from,
     required ({int id, String newPassword}) super.argument,
@@ -498,11 +510,11 @@ final class ChangePasswordProvider
 
   @$internal
   @override
-  $FutureProviderElement<dynamic> $createElement($ProviderPointer pointer) =>
+  $FutureProviderElement<String> $createElement($ProviderPointer pointer) =>
       $FutureProviderElement(pointer);
 
   @override
-  FutureOr<dynamic> create(Ref ref) {
+  FutureOr<String> create(Ref ref) {
     final argument = this.argument as ({int id, String newPassword});
     return changePassword(
       ref,
@@ -522,12 +534,12 @@ final class ChangePasswordProvider
   }
 }
 
-String _$changePasswordHash() => r'c710c9faeaa6bbdb47058e715619dba34a2c1a41';
+String _$changePasswordHash() => r'bffdd128bf29f827bdca09646721abca0b7eb330';
 
 final class ChangePasswordFamily extends $Family
     with
         $FunctionalFamilyOverride<
-          FutureOr<dynamic>,
+          FutureOr<String>,
           ({int id, String newPassword})
         > {
   const ChangePasswordFamily._()
@@ -586,4 +598,4 @@ final class PrefecturesProvider
   }
 }
 
-String _$prefecturesHash() => r'0a6a5b96d18064907010b8ff90b7737be3728317';
+String _$prefecturesHash() => r'cd69b2351f196ec4ac095a957d564100572296fe';
