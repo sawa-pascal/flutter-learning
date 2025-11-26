@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_application_ec_site/passwordChange.dart';
 import 'package:flutter_application_ec_site/userSetting.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'login.dart';
 import 'cart.dart';
+import 'managementSystemWidget/managementSystemWidget.dart';
 import 'models/userModel/userModel.dart';
 import 'purchaseHistory.dart';
 import 'myApiProvider.dart';
@@ -71,6 +73,17 @@ class AppDrawer extends ConsumerWidget {
             _buildDrawerHeader(),
             _buildCategorySection(context),
             _buildCategoryList(context, ref, categoriesAsync),
+
+            const Divider(),
+
+            ListTile(
+              title: Text('管理画面を開く'),
+              leading: const Icon(Icons.admin_panel_settings, color: Colors.blue),
+              onTap: () => Navigator.of(
+                context,
+                rootNavigator: true,
+              ).push(MaterialPageRoute(builder: (context) => const ManagementSystemWidget())),
+            ),
           ],
         ),
       ),
