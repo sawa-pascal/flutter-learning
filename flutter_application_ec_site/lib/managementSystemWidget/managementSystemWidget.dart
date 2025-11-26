@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_application_ec_site/managementSystemWidget/categories/categoriesList.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'msApiProvider.dart';
@@ -46,9 +47,9 @@ class _ManagementSystemWidgetState
         });
         // ログイン成功時の処理
         if (mounted) {
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (context) => const CategoriesListPage()));
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => const CategoriesListPage()),
+          );
         }
       } else {
         setState(() {
@@ -105,7 +106,48 @@ class _ManagementSystemWidgetState
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            '名前: testUser',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.copy),
+                          tooltip: 'コピー',
+                          onPressed: () {
+                            Clipboard.setData(const ClipboardData(text: 'testUser'));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('名前をコピーしました')),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'パスワード: testUser',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.copy),
+                          tooltip: 'コピー',
+                          onPressed: () {
+                            Clipboard.setData(const ClipboardData(text: 'testUser'));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('パスワードをコピーしました')),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 44),
                     TextField(
                       controller: _nameController,
                       decoration: const InputDecoration(

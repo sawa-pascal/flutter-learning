@@ -136,9 +136,21 @@ class AppDrawer extends ConsumerWidget {
       return const ListTile(title: Text('カテゴリーなし'));
     }
 
+    // order_displayでソート
+    final List<dynamic> sortedCategories = List<dynamic>.from(categories);
+    sortedCategories.sort((a, b) {
+      final aDisplayOrder = (a['display_order'] is int)
+          ? a['display_order']
+          : int.tryParse(a['display_order']?.toString() ?? '') ?? 0;
+      final bDisplayOrder = (b['display_order'] is int)
+          ? b['display_order']
+          : int.tryParse(b['display_order']?.toString() ?? '') ?? 0;
+      return aDisplayOrder.compareTo(bDisplayOrder);
+    });
+
     return Column(
       children: [
-        for (var cat in categories)
+        for (var cat in sortedCategories)
           ListTile(
             title: Text(cat['name'] ?? ''),
             leading: const Icon(Icons.label_outline),

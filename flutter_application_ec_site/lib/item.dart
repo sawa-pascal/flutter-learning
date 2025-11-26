@@ -100,12 +100,19 @@ class _ItemListState extends ConsumerState<ItemList> {
     return map;
   }
 
+  // カテゴリーをdisplay_orderでソート
   List<Map<String, dynamic>> _sortCategories(List<dynamic> categories) {
     final sorted = List<Map<String, dynamic>>.from(categories);
     sorted.sort((a, b) {
-      final ao = int.tryParse(a['order'].toString()) ?? 9999;
-      final bo = int.tryParse(b['order'].toString()) ?? 9999;
-      return ao.compareTo(bo);
+      final ao = a['display_order'];
+      final bo = b['display_order'];
+      final int aOrder = (ao is int)
+          ? ao
+          : int.tryParse(ao?.toString() ?? '') ?? 9999;
+      final int bOrder = (bo is int)
+          ? bo
+          : int.tryParse(bo?.toString() ?? '') ?? 9999;
+      return aOrder.compareTo(bOrder);
     });
     return sorted;
   }

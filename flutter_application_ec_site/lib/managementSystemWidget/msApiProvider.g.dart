@@ -90,3 +90,85 @@ final class ManagementSigninFamily extends $Family
   @override
   String toString() => r'managementSigninProvider';
 }
+
+@ProviderFor(createCategories)
+const createCategoriesProvider = CreateCategoriesFamily._();
+
+final class CreateCategoriesProvider
+    extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
+    with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+  const CreateCategoriesProvider._({
+    required CreateCategoriesFamily super.from,
+    required ({String name, String display_order}) super.argument,
+  }) : super(
+         retry: null,
+         name: r'createCategoriesProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$createCategoriesHash();
+
+  @override
+  String toString() {
+    return r'createCategoriesProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<dynamic> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<dynamic> create(Ref ref) {
+    final argument = this.argument as ({String name, String display_order});
+    return createCategories(
+      ref,
+      name: argument.name,
+      display_order: argument.display_order,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is CreateCategoriesProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$createCategoriesHash() => r'53200ac1bbc8055b6f648cb1220225e636702d92';
+
+final class CreateCategoriesFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<dynamic>,
+          ({String name, String display_order})
+        > {
+  const CreateCategoriesFamily._()
+    : super(
+        retry: null,
+        name: r'createCategoriesProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  CreateCategoriesProvider call({
+    required String name,
+    required String display_order,
+  }) => CreateCategoriesProvider._(
+    argument: (name: name, display_order: display_order),
+    from: this,
+  );
+
+  @override
+  String toString() => r'createCategoriesProvider';
+}

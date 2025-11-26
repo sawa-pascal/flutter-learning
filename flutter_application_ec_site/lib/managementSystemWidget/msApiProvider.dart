@@ -97,3 +97,22 @@ Future<dynamic> managementSignin(
     key: 'user',
   );
 }
+
+@riverpod
+Future<dynamic> createCategories(
+  Ref ref, {
+  required String name,
+  required String display_order,
+}) async {
+  return _handleRequest<dynamic>(
+    request: () => http.Client().post(
+      Uri.http(apiBaseUrl, '/api/categories/create_categories.php'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'name': name,
+        'display_order': display_order,
+      }),
+    ),
+    onSuccess: (json) => json ?? {},
+  );
+}
