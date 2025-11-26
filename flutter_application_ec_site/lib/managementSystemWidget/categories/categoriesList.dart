@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_ec_site/managementSystemWidget/categories/categoriesCreator.dart';
+import 'package:flutter_application_ec_site/myHomePage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../myApiProvider.dart';
 import '../paging.dart'; // ← Paginationウィジェットをインポート
@@ -77,7 +78,19 @@ class _CategoriesListPageState extends ConsumerState<CategoriesListPage> {
     List<dynamic> paged = [];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('カテゴリー一覧')),
+      // AppBarに戻るボタンを表示しないために、自動で追加されるleadingを消す
+      appBar: AppBar(
+        title: const Text('カテゴリー一覧'),
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => MyHomePage(title: 'S.A.アプリ'),
+            ),
+          ),
+          icon: const Icon(Icons.home),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
