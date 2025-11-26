@@ -6,6 +6,89 @@ import 'login.dart';
 import 'cart.dart';
 import 'models/userModel/userModel.dart';
 import 'purchaseHistory.dart';
+import 'myApiProvider.dart';
+
+// カテゴリーをクリックした時にホームのリストまでジャンプするID
+typedef OnCategorySelected = void Function(int categoryId, String categoryName);
+
+/// サイドメニュー（Drawer）ウィジェット
+class AppDrawer extends ConsumerWidget {
+  final OnCategorySelected? onCategorySelected;
+
+  const AppDrawer({Key? key, this.onCategorySelected}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final categoriesAsync = ref.watch(categoriesProvider);
+
+    return Drawer(
+      child: SafeArea(
+        child: ListView(
+          children: [
+            const SizedBox(
+              height: 100,
+              child: DrawerHeader(
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: NetworkImage(
+                      'http://3.107.37.75/images/stationery.jpeg',
+                    ),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: SizedBox.shrink(),
+              ),
+            ),
+            // カテゴリー一覧を表示
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'カテゴリー',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            categoriesAsync.when(
+              data: (categories) {
+                if (categories.isEmpty) {
+                  return ListTile(title: Text('カテゴリーなし'));
+                }
+
+                return Column(
+                  children: [
+                    for (var cat in categories)
+                      ListTile(
+                        title: Text(cat['name'] ?? ''),
+                        leading: const Icon(Icons.label_outline),
+                        onTap: () {
+                          Navigator.pop(context); // Drawer閉じる
+                          if (onCategorySelected != null && cat['id'] != null) {
+                            final categoryId = cat['id'] is int
+                                ? cat['id'] as int
+                                : int.tryParse(cat['id'].toString());
+                            if (categoryId != null) {
+                              onCategorySelected!(
+                                categoryId,
+                                cat['name'] ?? '',
+                              );
+                            }
+                          }
+                        },
+                      ),
+                  ],
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, st) => ListTile(
+                title: Text('カテゴリー取得エラー'),
+                subtitle: Text(err.toString()),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 /// アプリ共通のAppBarを生成する関数
 /// [title]：タイトルを表示
@@ -17,22 +100,17 @@ AppBar buildAppBar(
   VoidCallback? onSearchPressed,
 }) {
   return AppBar(
-    // タイトルウィジェット
     title: _AppBarTitle(title: title),
-    centerTitle: true, // タイトルを中央寄せ
-
+    centerTitle: true,
     actions: [
-      // ユーザーのログイン状態によって「ログイン」ボタンかユーザー名表示
       Align(
         alignment: Alignment.centerLeft,
         child: _UserAction(userModel: userModel, context: context),
       ),
-      // カートボタン
       _CartAction(context: context),
     ],
-    elevation: 10, // 影の高さ
-    backgroundColor: Colors.red, // AppBarの背景色
-    // flexibleSpace: Image.network(imageBaseUrl + 'stationery.jpeg'), // 背景画像サンプル
+    elevation: 10,
+    backgroundColor: Colors.red,
   );
 }
 
@@ -45,13 +123,12 @@ class _AppBarTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: const TextStyle(fontSize: 30, color: Colors.green), // 大きな緑色文字
+      style: const TextStyle(fontSize: 30, color: Colors.green),
     );
   }
 }
 
 /// ユーザー用アクション部分（ログイン状態で表示を切替）
-/// 未ログインなら「ログイン」ボタン／ログイン済みならユーザー名をメニューボタン化
 class _UserAction extends ConsumerWidget {
   final UserModel? userModel;
   final BuildContext context;
@@ -60,7 +137,6 @@ class _UserAction extends ConsumerWidget {
   @override
   Widget build(BuildContext contextWidget, WidgetRef ref) {
     if (userModel == null) {
-      // 未ログイン→「ログイン」ボタン
       return TextButton(
         onPressed: () => Navigator.of(
           context,
@@ -69,7 +145,6 @@ class _UserAction extends ConsumerWidget {
         child: const Text('ログイン'),
       );
     }
-    // ログイン済み→ユーザー名を押すとメニューを表示
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: Center(
@@ -90,7 +165,6 @@ class _UserAction extends ConsumerWidget {
                 MaterialPageRoute(builder: (context) => const PasswordChange()),
               );
             } else if (value == 'logout') {
-              // ログアウト処理（ユーザーモデルのリセットやAPI呼び出し等）
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
@@ -103,14 +177,11 @@ class _UserAction extends ConsumerWidget {
                     ),
                     TextButton(
                       onPressed: () {
-                        // Providerでユーザー情報をクリア（ログアウト処理）
                         ref.read(userModelProvider.notifier).state = null;
-                        // ログアウト完了をスナックバーで通知
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('ログアウトしました')),
                         );
-                        Navigator.pop(context); // ダイアログ閉じる
-                        // 追加：トップページ等に遷移など
+                        Navigator.pop(context);
                       },
                       child: const Text(
                         'ログアウト',
@@ -163,7 +234,7 @@ class _CartAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      icon: const Icon(Icons.shopping_cart), // カートアイコン
+      icon: const Icon(Icons.shopping_cart),
       onPressed: () => Navigator.of(
         this.context,
         rootNavigator: true,

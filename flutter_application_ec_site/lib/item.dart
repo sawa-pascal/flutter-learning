@@ -9,12 +9,59 @@ import 'models/cartItemModel/cartItemModel.dart';
 import 'utility.dart';
 
 /// 商品リストを表示するウィジェット
-class ItemList extends ConsumerWidget {
+class ItemList extends ConsumerStatefulWidget {
   final List<dynamic> items;
-  const ItemList({Key? key, required this.items}) : super(key: key);
+  final ScrollController? scrollController;
+  final int? selectedCategoryId;
+  final VoidCallback? onCategoryScrolled;
+
+  const ItemList({
+    Key? key,
+    required this.items,
+    this.scrollController,
+    this.selectedCategoryId,
+    this.onCategoryScrolled,
+  }) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ItemList> createState() => _ItemListState();
+}
+
+class _ItemListState extends ConsumerState<ItemList> {
+  final Map<int, GlobalKey> _categoryKeys = {};
+
+  @override
+  void didUpdateWidget(ItemList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 選択されたカテゴリーIDが変更された場合、スクロールを実行
+    if (widget.selectedCategoryId != null &&
+        widget.selectedCategoryId != oldWidget.selectedCategoryId &&
+        widget.scrollController != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToCategory(widget.selectedCategoryId!);
+      });
+    }
+  }
+
+  void _scrollToCategory(int categoryId) {
+    final key = _categoryKeys[categoryId];
+    if (key != null && key.currentContext != null) {
+      Scrollable.ensureVisible(
+        key.currentContext!,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+        alignment: 0.0, // 画面の上部に配置
+        alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+      ).then((_) {
+        if (widget.onCategoryScrolled != null) {
+          widget.onCategoryScrolled!();
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoriesProvider);
 
     // FutureBuilder的にAsyncValueを分岐して使う
@@ -24,7 +71,7 @@ class ItemList extends ConsumerWidget {
       data: (categories) {
         // 商品をカテゴリーごとにグループ化: Map<category_id, List<item>>
         final Map<String, List<dynamic>> itemsByCategory = {};
-        for (final item in items) {
+        for (final item in widget.items) {
           final cid = item['category_id']?.toString() ?? '0';
           itemsByCategory.putIfAbsent(cid, () => []).add(item);
         }
@@ -37,8 +84,17 @@ class ItemList extends ConsumerWidget {
           return ao.compareTo(bo);
         });
 
+        // 各カテゴリーのキーを初期化
+        for (final category in sortedCategories) {
+          final categoryId = int.tryParse(category['id'].toString());
+          if (categoryId != null && !_categoryKeys.containsKey(categoryId)) {
+            _categoryKeys[categoryId] = GlobalKey();
+          }
+        }
+
         // 表示用: 各カテゴリーのセクション(header＋商品リスト)
         return ListView.separated(
+          controller: widget.scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           itemCount: sortedCategories.length,
           separatorBuilder: (context, index) => const Divider(
@@ -50,15 +106,17 @@ class ItemList extends ConsumerWidget {
           ),
           itemBuilder: (context, catIndex) {
             final category = sortedCategories[catIndex];
-            final categoryId = category['id'].toString();
+            final categoryIdStr = category['id'].toString();
+            final categoryId = int.tryParse(categoryIdStr);
             final categoryName = category['name']?.toString() ?? '未分類';
-            final categoryItems = itemsByCategory[categoryId] ?? [];
+            final categoryItems = itemsByCategory[categoryIdStr] ?? [];
 
             if (categoryItems.isEmpty) {
               // このカテゴリに商品が無ければセクションをスキップ
               return const SizedBox.shrink();
             }
             return Padding(
+              key: categoryId != null ? _categoryKeys[categoryId] : null,
               padding: const EdgeInsets.only(bottom: 16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
