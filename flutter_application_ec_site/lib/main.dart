@@ -2,36 +2,49 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'myHomePage.dart';
 
-void main() => runApp(ProviderScope(child: const MyApp()));
+/// アプリケーションのエントリーポイント
+/// 
+/// RiverpodのProviderScopeでアプリ全体をラップし、
+/// 状態管理の基盤を提供します。
+void main() => runApp(const ProviderScope(child: MyApp()));
 
+/// アプリケーションのルートウィジェット
+/// 
+/// MaterialAppを設定し、アプリ全体のテーマとルーティングを管理します。
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    //
-    // ヘッダー(AppBar)がcyan色にならない理由:
-    // ThemeData の primarySwatch: Colors.cyan は確かに
-    // 昔のMaterial2のテーマではAppBarの色に反映されていました。
-    // しかし最近のFlutter（Material 3）ではprimarySwatchやprimaryColorは
-    // AppBarの背景色には自動で効きません。
-    //
-    // Material 3(Flutter 3.7以降あたりから)では
-    // colorScheme や appBarTheme を調整しないと
-    // ヘッダーの色が変わらないことがよくあります。
-    //
-    // 解決方法の例（appBarThemeで明示指定する）:
     return MaterialApp(
       title: 'S.A.アプリ',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.cyan),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.cyan,
-          foregroundColor: Colors.white,
-        ),
-        useMaterial3: true, // 必要に応じて
-      ),
+      theme: _buildTheme(),
       home: const MyHomePage(title: 'S.A.アプリ'),
+      debugShowCheckedModeBanner: false,
+    );
+  }
+
+  /// アプリケーションのテーマを構築
+  /// 
+  /// Material 3を使用し、カラースキームとAppBarのテーマを設定します。
+  /// Material 3では、primarySwatchやprimaryColorはAppBarの背景色に
+  /// 自動的に反映されないため、appBarThemeで明示的に指定する必要があります。
+  ThemeData _buildTheme() {
+    return ThemeData(
+      // Material 3のカラースキームを設定
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.cyan,
+        brightness: Brightness.light,
+      ),
+      // AppBarのテーマを明示的に設定
+      // Material 3では、colorSchemeだけではAppBarの色が変わらないため
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.cyan,
+        foregroundColor: Colors.white,
+        elevation: 4,
+      ),
+      // Material 3を有効化
+      useMaterial3: true,
     );
   }
 }
