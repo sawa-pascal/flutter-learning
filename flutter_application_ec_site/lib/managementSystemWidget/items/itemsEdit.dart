@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../myApiProvider.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class ItemsEditPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> item;
@@ -18,10 +20,17 @@ class _ItemsEditPageState extends ConsumerState<ItemsEditPage> {
   late TextEditingController _priceController;
   late TextEditingController _stockController;
   late TextEditingController _categoryIdController;
+  late TextEditingController _descriptionController;
+  late TextEditingController _imageUrlController;
 
   bool _isSubmitting = false;
+  bool _isUploadingImage = false;
+
   String? _errorText;
   String? _successText;
+
+  File? _pickedImage;
+  String? _uploadedImageUrl;
 
   @override
   void initState() {
@@ -38,6 +47,12 @@ class _ItemsEditPageState extends ConsumerState<ItemsEditPage> {
     _categoryIdController = TextEditingController(
       text: widget.item['category_id']?.toString() ?? '',
     );
+    _descriptionController = TextEditingController(
+      text: widget.item['description']?.toString() ?? '',
+    );
+    _imageUrlController = TextEditingController(
+      text: widget.item['image_url']?.toString() ?? '',
+    );
   }
 
   @override
@@ -46,7 +61,83 @@ class _ItemsEditPageState extends ConsumerState<ItemsEditPage> {
     _priceController.dispose();
     _stockController.dispose();
     _categoryIdController.dispose();
+    _descriptionController.dispose();
+    _imageUrlController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 900,
+      maxHeight: 900,
+      imageQuality: 85,
+    );
+
+    if (pickedFile != null) {
+      setState(() {
+        _pickedImage = File(pickedFile.path);
+      });
+      await _uploadImage();
+    }
+  }
+
+  Future<void> _uploadImage() async {
+    if (_pickedImage == null) {
+      setState(() {
+        _errorText = "画像ファイルが選択されていません";
+      });
+      return;
+    }
+    setState(() {
+      _isUploadingImage = true;
+      _errorText = null;
+    });
+    try {
+      final imageBytes = await _pickedImage!.readAsBytes();
+      // カテゴリーIDからカテゴリー名を取得してアップロード時に渡す
+      String categoryName = "";
+      final categoryId = int.tryParse(_categoryIdController.text.trim());
+      if (categoryId != null && mounted) {
+        // categoriesProvider は List<Map> を返す想定
+        final categories = await ref.read(categoriesProvider.future);
+        final category = categories.firstWhere(
+          (c) => c['id'].toString() == categoryId.toString(),
+          orElse: () => null,
+        );
+        if (category != null && category['name'] != null) {
+          categoryName = category['name'].toString();
+        }
+      }
+      final res = await ref.read(
+        uploadItemImageProvider(
+          categoryName: categoryName,
+          imageBytes: imageBytes,
+        ).future,
+      );
+      if (res != null &&
+          res is Map &&
+          res['image_url'] is String &&
+          res['image_url'].toString().isNotEmpty) {
+        setState(() {
+          _uploadedImageUrl = res['image_url'] as String;
+          _imageUrlController.text = _uploadedImageUrl!;
+        });
+      } else {
+        setState(() {
+          _errorText = "画像のアップロードに失敗しました";
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorText = "画像のアップロードエラー: $e";
+      });
+    } finally {
+      setState(() {
+        _isUploadingImage = false;
+      });
+    }
   }
 
   Future<void> _submitEdit() async {
@@ -66,8 +157,9 @@ class _ItemsEditPageState extends ConsumerState<ItemsEditPage> {
           price: int.tryParse(_priceController.text.trim())!,
           stock: int.tryParse(_stockController.text.trim())!,
           category_id: int.tryParse(_categoryIdController.text.trim())!,
-          description: '',
-          image: '',
+          description: _descriptionController.text.trim(),
+          image_url: _uploadedImageUrl ?? _imageUrlController.text.trim(),
+          origin_image_url: widget.item['image_url']?.toString() ?? '',
         ).future,
       );
 
@@ -102,6 +194,7 @@ class _ItemsEditPageState extends ConsumerState<ItemsEditPage> {
     TextInputType? keyboardType,
     String? Function(String?)? validator,
     List<TextInputFormatter>? inputFormatters,
+    int maxLines = 1,
     bool readOnly = false,
   }) {
     return Padding(
@@ -116,7 +209,58 @@ class _ItemsEditPageState extends ConsumerState<ItemsEditPage> {
         keyboardType: keyboardType,
         validator: validator,
         inputFormatters: inputFormatters,
+        maxLines: maxLines,
       ),
+    );
+  }
+
+  Widget _imageUploadSection() {
+    final imageUrl = _uploadedImageUrl ?? _imageUrlController.text.trim();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text("商品画像", style: TextStyle(fontWeight: FontWeight.w600)),
+        const SizedBox(height: 8),
+
+        ElevatedButton.icon(
+          onPressed: _isUploadingImage ? null : _pickImage,
+          icon: const Icon(Icons.image),
+          label: Text(_isUploadingImage ? "アップ中..." : "選択"),
+        ),
+
+        const SizedBox(height: 10),
+        if (_pickedImage != null) ...{
+          Padding(
+            padding: const EdgeInsets.only(top: 5),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Image.file(
+                _pickedImage!,
+                height: 98,
+                width: 98,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+        } else if (imageUrl.isNotEmpty)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: Image.network(
+              imageBaseUrl + imageUrl,
+              height: 98,
+              width: 98,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stack) {
+                return Container(
+                  height: 98,
+                  width: 98,
+                  color: Colors.grey[300],
+                  child: const Icon(Icons.broken_image, size: 36),
+                );
+              },
+            ),
+          ),
+      ],
     );
   }
 
@@ -127,7 +271,7 @@ class _ItemsEditPageState extends ConsumerState<ItemsEditPage> {
       body: Center(
         child: SingleChildScrollView(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
+            constraints: const BoxConstraints(maxWidth: 500),
             child: Card(
               margin: const EdgeInsets.all(28),
               child: Padding(
@@ -163,8 +307,9 @@ class _ItemsEditPageState extends ConsumerState<ItemsEditPage> {
                           FilteringTextInputFormatter.digitsOnly,
                         ],
                         validator: (val) {
-                          if (val == null || val.isEmpty)
+                          if (val == null || val.isEmpty) {
                             return 'カテゴリーを入力してください';
+                          }
                           final n = int.tryParse(val);
                           if (n == null || n < 0) return '正しいカテゴリーを入力してください';
                           return null;
@@ -198,6 +343,18 @@ class _ItemsEditPageState extends ConsumerState<ItemsEditPage> {
                           return null;
                         },
                       ),
+                      _field(
+                        controller: _descriptionController,
+                        label: '説明（オプション）',
+                        keyboardType: TextInputType.multiline,
+                        maxLines: 3,
+                        validator: (val) {
+                          // 説明は必須でない
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      _imageUploadSection(),
 
                       if (_errorText != null) ...[
                         const SizedBox(height: 10),

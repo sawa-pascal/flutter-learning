@@ -337,7 +337,7 @@ final class CreateItemsProvider
       int price,
       int stock,
       String description,
-      String image,
+      String image_url,
     })
     super.argument,
   }) : super(
@@ -373,7 +373,7 @@ final class CreateItemsProvider
               int price,
               int stock,
               String description,
-              String image,
+              String image_url,
             });
     return createItems(
       ref,
@@ -382,7 +382,7 @@ final class CreateItemsProvider
       price: argument.price,
       stock: argument.stock,
       description: argument.description,
-      image: argument.image,
+      image_url: argument.image_url,
     );
   }
 
@@ -397,7 +397,7 @@ final class CreateItemsProvider
   }
 }
 
-String _$createItemsHash() => r'c846d28873f2794bd55be89055006308229cd6d1';
+String _$createItemsHash() => r'1060e764ab9c47220edbdd878f89793543b13cc8';
 
 final class CreateItemsFamily extends $Family
     with
@@ -409,7 +409,7 @@ final class CreateItemsFamily extends $Family
             int price,
             int stock,
             String description,
-            String image,
+            String image_url,
           })
         > {
   const CreateItemsFamily._()
@@ -427,7 +427,7 @@ final class CreateItemsFamily extends $Family
     required int price,
     required int stock,
     required String description,
-    required String image,
+    required String image_url,
   }) => CreateItemsProvider._(
     argument: (
       name: name,
@@ -435,7 +435,7 @@ final class CreateItemsFamily extends $Family
       price: price,
       stock: stock,
       description: description,
-      image: image,
+      image_url: image_url,
     ),
     from: this,
   );
@@ -459,7 +459,8 @@ final class UpdateItemsProvider
       int price,
       int stock,
       String description,
-      String image,
+      String image_url,
+      String? origin_image_url,
     })
     super.argument,
   }) : super(
@@ -496,7 +497,8 @@ final class UpdateItemsProvider
               int price,
               int stock,
               String description,
-              String image,
+              String image_url,
+              String? origin_image_url,
             });
     return updateItems(
       ref,
@@ -506,7 +508,8 @@ final class UpdateItemsProvider
       price: argument.price,
       stock: argument.stock,
       description: argument.description,
-      image: argument.image,
+      image_url: argument.image_url,
+      origin_image_url: argument.origin_image_url,
     );
   }
 
@@ -521,7 +524,7 @@ final class UpdateItemsProvider
   }
 }
 
-String _$updateItemsHash() => r'cdfe4f5b60138cae0232f5bfecb942a4ac439b03';
+String _$updateItemsHash() => r'5a0373a6721e4a6bd2a783732281ddda4b4dc650';
 
 final class UpdateItemsFamily extends $Family
     with
@@ -534,7 +537,8 @@ final class UpdateItemsFamily extends $Family
             int price,
             int stock,
             String description,
-            String image,
+            String image_url,
+            String? origin_image_url,
           })
         > {
   const UpdateItemsFamily._()
@@ -553,7 +557,8 @@ final class UpdateItemsFamily extends $Family
     required int price,
     required int stock,
     required String description,
-    required String image,
+    required String image_url,
+    String? origin_image_url,
   }) => UpdateItemsProvider._(
     argument: (
       id: id,
@@ -562,7 +567,8 @@ final class UpdateItemsFamily extends $Family
       price: price,
       stock: stock,
       description: description,
-      image: image,
+      image_url: image_url,
+      origin_image_url: origin_image_url,
     ),
     from: this,
   );
@@ -638,6 +644,97 @@ final class DeleteItemsFamily extends $Family
 
   @override
   String toString() => r'deleteItemsProvider';
+}
+
+@ProviderFor(uploadItemImage)
+const uploadItemImageProvider = UploadItemImageFamily._();
+
+final class UploadItemImageProvider
+    extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
+    with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+  const UploadItemImageProvider._({
+    required UploadItemImageFamily super.from,
+    required ({String categoryName, String? imageUrl, List<int> imageBytes})
+    super.argument,
+  }) : super(
+         retry: null,
+         name: r'uploadItemImageProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$uploadItemImageHash();
+
+  @override
+  String toString() {
+    return r'uploadItemImageProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<dynamic> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<dynamic> create(Ref ref) {
+    final argument =
+        this.argument
+            as ({String categoryName, String? imageUrl, List<int> imageBytes});
+    return uploadItemImage(
+      ref,
+      categoryName: argument.categoryName,
+      imageUrl: argument.imageUrl,
+      imageBytes: argument.imageBytes,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is UploadItemImageProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$uploadItemImageHash() => r'36a08d460b556cf7fbff612306e841571efa45ac';
+
+final class UploadItemImageFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<dynamic>,
+          ({String categoryName, String? imageUrl, List<int> imageBytes})
+        > {
+  const UploadItemImageFamily._()
+    : super(
+        retry: null,
+        name: r'uploadItemImageProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  UploadItemImageProvider call({
+    required String categoryName,
+    String? imageUrl,
+    required List<int> imageBytes,
+  }) => UploadItemImageProvider._(
+    argument: (
+      categoryName: categoryName,
+      imageUrl: imageUrl,
+      imageBytes: imageBytes,
+    ),
+    from: this,
+  );
+
+  @override
+  String toString() => r'uploadItemImageProvider';
 }
 
 @ProviderFor(purchase)

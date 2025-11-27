@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../../myApiProvider.dart';
 
 class ItemsCreatorPage extends ConsumerStatefulWidget {
@@ -10,13 +12,14 @@ class ItemsCreatorPage extends ConsumerStatefulWidget {
   ConsumerState<ItemsCreatorPage> createState() => _ItemsCreatorPageState();
 }
 
-class _ItemsCreatorStateFields {
+class _ItemsCreatorPageStateFields {
   late TextEditingController nameController;
   late TextEditingController priceController;
   late TextEditingController stockController;
-  late TextEditingController descriptionController; // 説明文追加
-  late TextEditingController imageController; // 画像URL追加
+  late TextEditingController descriptionController;
+  late TextEditingController imageController;
   int? selectedCategoryId;
+  String? selectedCategoryName;
 
   void dispose() {
     nameController.dispose();
@@ -29,12 +32,16 @@ class _ItemsCreatorStateFields {
 
 class _ItemsCreatorPageState extends ConsumerState<ItemsCreatorPage> {
   final _formKey = GlobalKey<FormState>();
-  final _fields = _ItemsCreatorStateFields();
+  final _fields = _ItemsCreatorPageStateFields();
   bool _isSubmitting = false;
   String? _errorText;
   String? _successText;
   List<dynamic> _categories = [];
   bool _categoriesLoading = true;
+
+  File? _pickedImage;
+  String? _uploadedImageUrl;
+  bool _isUploadingImage = false;
 
   @override
   void initState() {
@@ -66,6 +73,8 @@ class _ItemsCreatorPageState extends ConsumerState<ItemsCreatorPage> {
             _fields.selectedCategoryId = (_categories.first['id'] is int)
                 ? _categories.first['id']
                 : int.tryParse(_categories.first['id'].toString());
+            _fields.selectedCategoryName =
+                _categories.first['name']?.toString() ?? '';
           }
         });
       } else {
@@ -83,6 +92,71 @@ class _ItemsCreatorPageState extends ConsumerState<ItemsCreatorPage> {
       });
     }
   }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 900,
+      maxHeight: 900,
+      imageQuality: 85,
+    );
+
+    if (pickedFile != null) {
+      setState(() {
+        _pickedImage = File(pickedFile.path);
+      });
+      await _uploadImage();
+    }
+  }
+
+  // --- use uploadItemImageProvider（Riverpod経由） to upload the image file, set _uploadedImageUrl and update URL field ---
+  Future<void> _uploadImage() async {
+    if (_pickedImage == null) {
+      setState(() {
+        _errorText = "画像ファイルが選択されていません";
+      });
+      return;
+    }
+    setState(() {
+      _isUploadingImage = true;
+      _errorText = null;
+    });
+    try {
+      final imageBytes = await _pickedImage!.readAsBytes();
+      final categoryName = _fields.selectedCategoryName ?? '';
+      final res = await ref.read(
+        uploadItemImageProvider(
+          categoryName: categoryName,
+          imageBytes: imageBytes,
+        ).future,
+      );
+      print(res);
+      // print(res); // For debugging: print response to console
+      if (res != null &&
+          res is Map &&
+          res['image_url'] is String &&
+          res['image_url'].toString().isNotEmpty) {
+        setState(() {
+          _uploadedImageUrl = res['image_url'] as String;
+          _fields.imageController.text = _uploadedImageUrl!;
+        });
+      } else {
+        setState(() {
+          _errorText = "画像のアップロードに失敗しました";
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorText = "画像のアップロードエラー: $e";
+      });
+    } finally {
+      setState(() {
+        _isUploadingImage = false;
+      });
+    }
+  }
+  // --- end of uploadItemImageProvider section ---
 
   Future<void> _submitItem() async {
     if (!_formKey.currentState!.validate()) return;
@@ -102,8 +176,8 @@ class _ItemsCreatorPageState extends ConsumerState<ItemsCreatorPage> {
       final price = int.tryParse(_fields.priceController.text.trim());
       final stock = int.tryParse(_fields.stockController.text.trim());
       final catId = _fields.selectedCategoryId;
-      final description = _fields.descriptionController.text.trim(); // 追加
-      final image = _fields.imageController.text.trim(); // 追加
+      final description = _fields.descriptionController.text.trim();
+      final image = _uploadedImageUrl ?? _fields.imageController.text.trim();
       if (price == null || price < 0) {
         setState(() {
           _errorText = '価格は0以上の整数で入力してください';
@@ -123,7 +197,7 @@ class _ItemsCreatorPageState extends ConsumerState<ItemsCreatorPage> {
           price: price,
           stock: stock,
           description: description,
-          image: image,
+          image_url: image,
         ).future,
       );
 
@@ -134,7 +208,7 @@ class _ItemsCreatorPageState extends ConsumerState<ItemsCreatorPage> {
         });
         await Future.delayed(const Duration(milliseconds: 800));
         if (mounted) {
-          Navigator.of(context).pop(true); // 戻ってリスト側でref.invalidateする想定
+          Navigator.of(context).pop(true);
         }
       } else {
         setState(() {
@@ -150,6 +224,74 @@ class _ItemsCreatorPageState extends ConsumerState<ItemsCreatorPage> {
         _isSubmitting = false;
       });
     }
+  }
+
+  Widget _imageUploadSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          "画像アップロード（任意）",
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        ElevatedButton.icon(
+          onPressed: _isUploadingImage ? null : _pickImage,
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+          icon: const Icon(Icons.image),
+          label: Text(_isUploadingImage ? "アップロード中..." : "画像を選択"),
+        ),
+
+        const SizedBox(height: 10),
+        if (_pickedImage != null)
+          SizedBox(
+            height: 120,
+            child: Stack(
+              alignment: Alignment.topRight,
+              children: [
+                Image.file(_pickedImage!, height: 120),
+                if (_isUploadingImage)
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                if (!_isUploadingImage)
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    color: Colors.red,
+                    tooltip: "画像を削除",
+                    onPressed: () {
+                      setState(() {
+                        _pickedImage = null;
+                        _uploadedImageUrl = null;
+                        _fields.imageController.clear();
+                      });
+                    },
+                  ),
+              ],
+            ),
+          ),
+        if (_uploadedImageUrl != null && _uploadedImageUrl!.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.green, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '画像アップロード済み',
+                    style: TextStyle(
+                      color: Colors.green[700],
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
   }
 
   @override
@@ -189,8 +331,8 @@ class _ItemsCreatorPageState extends ConsumerState<ItemsCreatorPage> {
                           ),
                           validator: (val) =>
                               (val == null || val.trim().isEmpty)
-                                  ? '商品名を入力してください'
-                                  : null,
+                              ? '商品名を入力してください'
+                              : null,
                         ),
                         const SizedBox(height: 16),
                         _categoriesLoading
@@ -220,6 +362,18 @@ class _ItemsCreatorPageState extends ConsumerState<ItemsCreatorPage> {
                                 onChanged: (val) {
                                   setState(() {
                                     _fields.selectedCategoryId = val;
+                                    final selected = _categories.firstWhere(
+                                      (c) =>
+                                          (c['id'] is int
+                                              ? c['id']
+                                              : int.tryParse(
+                                                  c['id'].toString(),
+                                                )) ==
+                                          val,
+                                      orElse: () => {},
+                                    );
+                                    _fields.selectedCategoryName =
+                                        selected['name']?.toString() ?? '';
                                   });
                                 },
                                 validator: (val) =>
@@ -240,7 +394,7 @@ class _ItemsCreatorPageState extends ConsumerState<ItemsCreatorPage> {
                           validator: (val) {
                             if (val == null || val.trim().isEmpty)
                               return '価格を入力してください';
-                            final num? p = int.tryParse(val.trim());
+                            final int? p = int.tryParse(val.trim());
                             if (p == null || p < 0) return '0以上の整数で入力';
                             return null;
                           },
@@ -259,7 +413,7 @@ class _ItemsCreatorPageState extends ConsumerState<ItemsCreatorPage> {
                           validator: (val) {
                             if (val == null || val.trim().isEmpty)
                               return '在庫を入力してください';
-                            final num? s = int.tryParse(val.trim());
+                            final int? s = int.tryParse(val.trim());
                             if (s == null || s < 0) return '0以上の整数で入力';
                             return null;
                           },
@@ -276,15 +430,7 @@ class _ItemsCreatorPageState extends ConsumerState<ItemsCreatorPage> {
                           maxLines: 3,
                         ),
                         const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _fields.imageController,
-                          decoration: const InputDecoration(
-                            labelText: '画像URL',
-                            hintText: '画像のURLを入力してください（任意）',
-                            border: OutlineInputBorder(),
-                          ),
-                          keyboardType: TextInputType.url,
-                        ),
+                        _imageUploadSection(),
                         const SizedBox(height: 24),
                         if (_errorText != null)
                           Padding(
