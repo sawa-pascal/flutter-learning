@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../msApiProvider.dart'; // msApiProvider.dartを使用
+import '../../myApiProvider.dart'; // msApiProvider.dartを使用
 
 class CategoriesCreatorPage extends ConsumerStatefulWidget {
   const CategoriesCreatorPage({Key? key}) : super(key: key);
@@ -36,7 +37,8 @@ class _CategoriesCreatorPageState extends ConsumerState<CategoriesCreatorPage> {
 
     try {
       final String name = _nameController.text.trim();
-      final String displayOrder = _displayOrderController.text.trim();
+      final String displayOrderStr = _displayOrderController.text.trim();
+      final int displayOrder = int.parse(displayOrderStr);
 
       final result = await ref.read(createCategoriesProvider(
         name: name,
@@ -123,6 +125,10 @@ class _CategoriesCreatorPageState extends ConsumerState<CategoriesCreatorPage> {
                           border: OutlineInputBorder(),
                         ),
                         keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          // 数字(半角のみ)入力のみ許可
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return '表示順を入力してください';

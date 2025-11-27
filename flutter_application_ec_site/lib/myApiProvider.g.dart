@@ -8,18 +8,9 @@ part of 'myApiProvider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// カテゴリー一覧を取得するProvider
-///
-/// サーバーからカテゴリーのリストを取得します。
-/// 戻り値: カテゴリー情報のリスト
 
 @ProviderFor(categories)
 const categoriesProvider = CategoriesProvider._();
-
-/// カテゴリー一覧を取得するProvider
-///
-/// サーバーからカテゴリーのリストを取得します。
-/// 戻り値: カテゴリー情報のリスト
 
 final class CategoriesProvider
     extends
@@ -29,10 +20,6 @@ final class CategoriesProvider
           FutureOr<List<dynamic>>
         >
     with $FutureModifier<List<dynamic>>, $FutureProvider<List<dynamic>> {
-  /// カテゴリー一覧を取得するProvider
-  ///
-  /// サーバーからカテゴリーのリストを取得します。
-  /// 戻り値: カテゴリー情報のリスト
   const CategoriesProvider._()
     : super(
         from: null,
@@ -61,18 +48,244 @@ final class CategoriesProvider
 
 String _$categoriesHash() => r'5aaf292782a83131410a3e24d01619cd61ab5612';
 
-/// 商品一覧を取得するProvider
-///
-/// サーバーから商品のリストを取得します。
-/// 戻り値: 商品情報のリスト
+@ProviderFor(createCategories)
+const createCategoriesProvider = CreateCategoriesFamily._();
+
+final class CreateCategoriesProvider
+    extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
+    with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+  const CreateCategoriesProvider._({
+    required CreateCategoriesFamily super.from,
+    required ({String name, int display_order}) super.argument,
+  }) : super(
+         retry: null,
+         name: r'createCategoriesProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$createCategoriesHash();
+
+  @override
+  String toString() {
+    return r'createCategoriesProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<dynamic> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<dynamic> create(Ref ref) {
+    final argument = this.argument as ({String name, int display_order});
+    return createCategories(
+      ref,
+      name: argument.name,
+      display_order: argument.display_order,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is CreateCategoriesProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$createCategoriesHash() => r'b98b1e7f5064fe1377e8a8147ca481bd9f5c4185';
+
+final class CreateCategoriesFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<dynamic>,
+          ({String name, int display_order})
+        > {
+  const CreateCategoriesFamily._()
+    : super(
+        retry: null,
+        name: r'createCategoriesProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  CreateCategoriesProvider call({
+    required String name,
+    required int display_order,
+  }) => CreateCategoriesProvider._(
+    argument: (name: name, display_order: display_order),
+    from: this,
+  );
+
+  @override
+  String toString() => r'createCategoriesProvider';
+}
+
+@ProviderFor(updateCategories)
+const updateCategoriesProvider = UpdateCategoriesFamily._();
+
+final class UpdateCategoriesProvider
+    extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
+    with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+  const UpdateCategoriesProvider._({
+    required UpdateCategoriesFamily super.from,
+    required ({int id, String name, int display_order}) super.argument,
+  }) : super(
+         retry: null,
+         name: r'updateCategoriesProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$updateCategoriesHash();
+
+  @override
+  String toString() {
+    return r'updateCategoriesProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<dynamic> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<dynamic> create(Ref ref) {
+    final argument =
+        this.argument as ({int id, String name, int display_order});
+    return updateCategories(
+      ref,
+      id: argument.id,
+      name: argument.name,
+      display_order: argument.display_order,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is UpdateCategoriesProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$updateCategoriesHash() => r'acbdfb9b2cc32e8804397b7e9de79c5663acb397';
+
+final class UpdateCategoriesFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<dynamic>,
+          ({int id, String name, int display_order})
+        > {
+  const UpdateCategoriesFamily._()
+    : super(
+        retry: null,
+        name: r'updateCategoriesProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  UpdateCategoriesProvider call({
+    required int id,
+    required String name,
+    required int display_order,
+  }) => UpdateCategoriesProvider._(
+    argument: (id: id, name: name, display_order: display_order),
+    from: this,
+  );
+
+  @override
+  String toString() => r'updateCategoriesProvider';
+}
+
+@ProviderFor(deleteCategories)
+const deleteCategoriesProvider = DeleteCategoriesFamily._();
+
+final class DeleteCategoriesProvider
+    extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
+    with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+  const DeleteCategoriesProvider._({
+    required DeleteCategoriesFamily super.from,
+    required int super.argument,
+  }) : super(
+         retry: null,
+         name: r'deleteCategoriesProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$deleteCategoriesHash();
+
+  @override
+  String toString() {
+    return r'deleteCategoriesProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<dynamic> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<dynamic> create(Ref ref) {
+    final argument = this.argument as int;
+    return deleteCategories(ref, id: argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is DeleteCategoriesProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$deleteCategoriesHash() => r'92e7333ac32ce7aedcef1c93f37bc5b0be17db71';
+
+final class DeleteCategoriesFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<dynamic>, int> {
+  const DeleteCategoriesFamily._()
+    : super(
+        retry: null,
+        name: r'deleteCategoriesProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  DeleteCategoriesProvider call({required int id}) =>
+      DeleteCategoriesProvider._(argument: id, from: this);
+
+  @override
+  String toString() => r'deleteCategoriesProvider';
+}
 
 @ProviderFor(items)
 const itemsProvider = ItemsProvider._();
-
-/// 商品一覧を取得するProvider
-///
-/// サーバーから商品のリストを取得します。
-/// 戻り値: 商品情報のリスト
 
 final class ItemsProvider
     extends
@@ -82,10 +295,6 @@ final class ItemsProvider
           FutureOr<List<dynamic>>
         >
     with $FutureModifier<List<dynamic>>, $FutureProvider<List<dynamic>> {
-  /// 商品一覧を取得するProvider
-  ///
-  /// サーバーから商品のリストを取得します。
-  /// 戻り値: 商品情報のリスト
   const ItemsProvider._()
     : super(
         from: null,
@@ -114,49 +323,37 @@ final class ItemsProvider
 
 String _$itemsHash() => r'064e1f33fc6cace5bd5411948e2521c372577fb3';
 
-/// ユーザーログインを実行するProvider
-///
-/// [email]: ユーザーのメールアドレス
-/// [password]: ユーザーのパスワード
-///
-/// 戻り値: ログイン成功時のユーザー情報
+@ProviderFor(createItems)
+const createItemsProvider = CreateItemsFamily._();
 
-@ProviderFor(login)
-const loginProvider = LoginFamily._();
-
-/// ユーザーログインを実行するProvider
-///
-/// [email]: ユーザーのメールアドレス
-/// [password]: ユーザーのパスワード
-///
-/// 戻り値: ログイン成功時のユーザー情報
-
-final class LoginProvider
+final class CreateItemsProvider
     extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
     with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
-  /// ユーザーログインを実行するProvider
-  ///
-  /// [email]: ユーザーのメールアドレス
-  /// [password]: ユーザーのパスワード
-  ///
-  /// 戻り値: ログイン成功時のユーザー情報
-  const LoginProvider._({
-    required LoginFamily super.from,
-    required ({String email, String password}) super.argument,
+  const CreateItemsProvider._({
+    required CreateItemsFamily super.from,
+    required ({
+      String name,
+      int category_id,
+      int price,
+      int stock,
+      String description,
+      String image,
+    })
+    super.argument,
   }) : super(
          retry: null,
-         name: r'loginProvider',
+         name: r'createItemsProvider',
          isAutoDispose: true,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
 
   @override
-  String debugGetCreateSourceHash() => _$loginHash();
+  String debugGetCreateSourceHash() => _$createItemsHash();
 
   @override
   String toString() {
-    return r'loginProvider'
+    return r'createItemsProvider'
         ''
         '$argument';
   }
@@ -168,13 +365,30 @@ final class LoginProvider
 
   @override
   FutureOr<dynamic> create(Ref ref) {
-    final argument = this.argument as ({String email, String password});
-    return login(ref, email: argument.email, password: argument.password);
+    final argument =
+        this.argument
+            as ({
+              String name,
+              int category_id,
+              int price,
+              int stock,
+              String description,
+              String image,
+            });
+    return createItems(
+      ref,
+      name: argument.name,
+      category_id: argument.category_id,
+      price: argument.price,
+      stock: argument.stock,
+      description: argument.description,
+      image: argument.image,
+    );
   }
 
   @override
   bool operator ==(Object other) {
-    return other is LoginProvider && other.argument == argument;
+    return other is CreateItemsProvider && other.argument == argument;
   }
 
   @override
@@ -183,76 +397,255 @@ final class LoginProvider
   }
 }
 
-String _$loginHash() => r'be4c4c8bf5c2bcddc2966683f386ea870f9e8e21';
+String _$createItemsHash() => r'c846d28873f2794bd55be89055006308229cd6d1';
 
-/// ユーザーログインを実行するProvider
-///
-/// [email]: ユーザーのメールアドレス
-/// [password]: ユーザーのパスワード
-///
-/// 戻り値: ログイン成功時のユーザー情報
-
-final class LoginFamily extends $Family
+final class CreateItemsFamily extends $Family
     with
         $FunctionalFamilyOverride<
           FutureOr<dynamic>,
-          ({String email, String password})
+          ({
+            String name,
+            int category_id,
+            int price,
+            int stock,
+            String description,
+            String image,
+          })
         > {
-  const LoginFamily._()
+  const CreateItemsFamily._()
     : super(
         retry: null,
-        name: r'loginProvider',
+        name: r'createItemsProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
 
-  /// ユーザーログインを実行するProvider
-  ///
-  /// [email]: ユーザーのメールアドレス
-  /// [password]: ユーザーのパスワード
-  ///
-  /// 戻り値: ログイン成功時のユーザー情報
-
-  LoginProvider call({required String email, required String password}) =>
-      LoginProvider._(argument: (email: email, password: password), from: this);
+  CreateItemsProvider call({
+    required String name,
+    required int category_id,
+    required int price,
+    required int stock,
+    required String description,
+    required String image,
+  }) => CreateItemsProvider._(
+    argument: (
+      name: name,
+      category_id: category_id,
+      price: price,
+      stock: stock,
+      description: description,
+      image: image,
+    ),
+    from: this,
+  );
 
   @override
-  String toString() => r'loginProvider';
+  String toString() => r'createItemsProvider';
 }
 
-/// 購入処理を実行するProvider
-///
-/// [userId]: 購入するユーザーのID
-/// [paymentId]: 支払い方法のID
-/// [itemIds]: 購入する商品のIDリスト
-/// [quantities]: 各商品の数量リスト（itemIdsと順序が一致している必要がある）
-///
-/// 戻り値: 購入処理の結果
+@ProviderFor(updateItems)
+const updateItemsProvider = UpdateItemsFamily._();
+
+final class UpdateItemsProvider
+    extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
+    with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+  const UpdateItemsProvider._({
+    required UpdateItemsFamily super.from,
+    required ({
+      int id,
+      String name,
+      int category_id,
+      int price,
+      int stock,
+      String description,
+      String image,
+    })
+    super.argument,
+  }) : super(
+         retry: null,
+         name: r'updateItemsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$updateItemsHash();
+
+  @override
+  String toString() {
+    return r'updateItemsProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<dynamic> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<dynamic> create(Ref ref) {
+    final argument =
+        this.argument
+            as ({
+              int id,
+              String name,
+              int category_id,
+              int price,
+              int stock,
+              String description,
+              String image,
+            });
+    return updateItems(
+      ref,
+      id: argument.id,
+      name: argument.name,
+      category_id: argument.category_id,
+      price: argument.price,
+      stock: argument.stock,
+      description: argument.description,
+      image: argument.image,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is UpdateItemsProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$updateItemsHash() => r'cdfe4f5b60138cae0232f5bfecb942a4ac439b03';
+
+final class UpdateItemsFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<dynamic>,
+          ({
+            int id,
+            String name,
+            int category_id,
+            int price,
+            int stock,
+            String description,
+            String image,
+          })
+        > {
+  const UpdateItemsFamily._()
+    : super(
+        retry: null,
+        name: r'updateItemsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  UpdateItemsProvider call({
+    required int id,
+    required String name,
+    required int category_id,
+    required int price,
+    required int stock,
+    required String description,
+    required String image,
+  }) => UpdateItemsProvider._(
+    argument: (
+      id: id,
+      name: name,
+      category_id: category_id,
+      price: price,
+      stock: stock,
+      description: description,
+      image: image,
+    ),
+    from: this,
+  );
+
+  @override
+  String toString() => r'updateItemsProvider';
+}
+
+@ProviderFor(deleteItems)
+const deleteItemsProvider = DeleteItemsFamily._();
+
+final class DeleteItemsProvider
+    extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
+    with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+  const DeleteItemsProvider._({
+    required DeleteItemsFamily super.from,
+    required int super.argument,
+  }) : super(
+         retry: null,
+         name: r'deleteItemsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$deleteItemsHash();
+
+  @override
+  String toString() {
+    return r'deleteItemsProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<dynamic> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<dynamic> create(Ref ref) {
+    final argument = this.argument as int;
+    return deleteItems(ref, id: argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is DeleteItemsProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$deleteItemsHash() => r'14106de9c21b4b1a55d404b75b575dfcfcfaf1e8';
+
+final class DeleteItemsFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<dynamic>, int> {
+  const DeleteItemsFamily._()
+    : super(
+        retry: null,
+        name: r'deleteItemsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  DeleteItemsProvider call({required int id}) =>
+      DeleteItemsProvider._(argument: id, from: this);
+
+  @override
+  String toString() => r'deleteItemsProvider';
+}
 
 @ProviderFor(purchase)
 const purchaseProvider = PurchaseFamily._();
 
-/// 購入処理を実行するProvider
-///
-/// [userId]: 購入するユーザーのID
-/// [paymentId]: 支払い方法のID
-/// [itemIds]: 購入する商品のIDリスト
-/// [quantities]: 各商品の数量リスト（itemIdsと順序が一致している必要がある）
-///
-/// 戻り値: 購入処理の結果
-
 final class PurchaseProvider
     extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
     with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
-  /// 購入処理を実行するProvider
-  ///
-  /// [userId]: 購入するユーザーのID
-  /// [paymentId]: 支払い方法のID
-  /// [itemIds]: 購入する商品のIDリスト
-  /// [quantities]: 各商品の数量リスト（itemIdsと順序が一致している必要がある）
-  ///
-  /// 戻り値: 購入処理の結果
   const PurchaseProvider._({
     required PurchaseFamily super.from,
     required (int, int, List<int>, List<int>) super.argument,
@@ -298,15 +691,6 @@ final class PurchaseProvider
 
 String _$purchaseHash() => r'04fc9669e96049cb50bfaf4214f98662d090beb5';
 
-/// 購入処理を実行するProvider
-///
-/// [userId]: 購入するユーザーのID
-/// [paymentId]: 支払い方法のID
-/// [itemIds]: 購入する商品のIDリスト
-/// [quantities]: 各商品の数量リスト（itemIdsと順序が一致している必要がある）
-///
-/// 戻り値: 購入処理の結果
-
 final class PurchaseFamily extends $Family
     with
         $FunctionalFamilyOverride<
@@ -322,15 +706,6 @@ final class PurchaseFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// 購入処理を実行するProvider
-  ///
-  /// [userId]: 購入するユーザーのID
-  /// [paymentId]: 支払い方法のID
-  /// [itemIds]: 購入する商品のIDリスト
-  /// [quantities]: 各商品の数量リスト（itemIdsと順序が一致している必要がある）
-  ///
-  /// 戻り値: 購入処理の結果
-
   PurchaseProvider call(
     int userId,
     int paymentId,
@@ -345,16 +720,8 @@ final class PurchaseFamily extends $Family
   String toString() => r'purchaseProvider';
 }
 
-/// 支払い方法一覧を取得するProvider
-///
-/// 戻り値: 支払い方法情報のリスト
-
 @ProviderFor(payments)
 const paymentsProvider = PaymentsProvider._();
-
-/// 支払い方法一覧を取得するProvider
-///
-/// 戻り値: 支払い方法情報のリスト
 
 final class PaymentsProvider
     extends
@@ -364,9 +731,6 @@ final class PaymentsProvider
           FutureOr<List<dynamic>>
         >
     with $FutureModifier<List<dynamic>>, $FutureProvider<List<dynamic>> {
-  /// 支払い方法一覧を取得するProvider
-  ///
-  /// 戻り値: 支払い方法情報のリスト
   const PaymentsProvider._()
     : super(
         from: null,
@@ -395,20 +759,8 @@ final class PaymentsProvider
 
 String _$paymentsHash() => r'2f9007f8ffc40cdd29a90c390d44f887b2c028a8';
 
-/// 購入履歴を取得するProvider
-///
-/// [user_id]: 購入履歴を取得するユーザーのID
-///
-/// 戻り値: 購入履歴情報のリスト
-
 @ProviderFor(purchaseHistory)
 const purchaseHistoryProvider = PurchaseHistoryFamily._();
-
-/// 購入履歴を取得するProvider
-///
-/// [user_id]: 購入履歴を取得するユーザーのID
-///
-/// 戻り値: 購入履歴情報のリスト
 
 final class PurchaseHistoryProvider
     extends
@@ -418,11 +770,6 @@ final class PurchaseHistoryProvider
           FutureOr<List<dynamic>>
         >
     with $FutureModifier<List<dynamic>>, $FutureProvider<List<dynamic>> {
-  /// 購入履歴を取得するProvider
-  ///
-  /// [user_id]: 購入履歴を取得するユーザーのID
-  ///
-  /// 戻り値: 購入履歴情報のリスト
   const PurchaseHistoryProvider._({
     required PurchaseHistoryFamily super.from,
     required int super.argument,
@@ -469,12 +816,6 @@ final class PurchaseHistoryProvider
 
 String _$purchaseHistoryHash() => r'68732e9edbfafa3942978ac4a529761518539e7c';
 
-/// 購入履歴を取得するProvider
-///
-/// [user_id]: 購入履歴を取得するユーザーのID
-///
-/// 戻り値: 購入履歴情報のリスト
-
 final class PurchaseHistoryFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<dynamic>>, int> {
   const PurchaseHistoryFamily._()
@@ -486,12 +827,6 @@ final class PurchaseHistoryFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// 購入履歴を取得するProvider
-  ///
-  /// [user_id]: 購入履歴を取得するユーザーのID
-  ///
-  /// 戻り値: 購入履歴情報のリスト
-
   PurchaseHistoryProvider call(int user_id) =>
       PurchaseHistoryProvider._(argument: user_id, from: this);
 
@@ -499,47 +834,133 @@ final class PurchaseHistoryFamily extends $Family
   String toString() => r'purchaseHistoryProvider';
 }
 
-/// ユーザー情報を更新するProvider
-///
-/// [id]: 更新するユーザーのID
-/// [name]: ユーザー名
-/// [email]: メールアドレス
-/// [hashed_password]: ハッシュ化されたパスワード
-/// [tel]: 電話番号
-/// [prefecture_id]: 都道府県ID
-/// [address]: 住所
-///
-/// 戻り値: 更新処理の結果
+@ProviderFor(usersSignup)
+const usersSignupProvider = UsersSignupFamily._();
+
+final class UsersSignupProvider
+    extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
+    with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+  const UsersSignupProvider._({
+    required UsersSignupFamily super.from,
+    required ({
+      String name,
+      String email,
+      String hashed_password,
+      String tel,
+      int prefecture_id,
+      String address,
+    })
+    super.argument,
+  }) : super(
+         retry: null,
+         name: r'usersSignupProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$usersSignupHash();
+
+  @override
+  String toString() {
+    return r'usersSignupProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<dynamic> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<dynamic> create(Ref ref) {
+    final argument =
+        this.argument
+            as ({
+              String name,
+              String email,
+              String hashed_password,
+              String tel,
+              int prefecture_id,
+              String address,
+            });
+    return usersSignup(
+      ref,
+      name: argument.name,
+      email: argument.email,
+      hashed_password: argument.hashed_password,
+      tel: argument.tel,
+      prefecture_id: argument.prefecture_id,
+      address: argument.address,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is UsersSignupProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$usersSignupHash() => r'542688fef4a019100600da3de0754ca681b8c566';
+
+final class UsersSignupFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<dynamic>,
+          ({
+            String name,
+            String email,
+            String hashed_password,
+            String tel,
+            int prefecture_id,
+            String address,
+          })
+        > {
+  const UsersSignupFamily._()
+    : super(
+        retry: null,
+        name: r'usersSignupProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  UsersSignupProvider call({
+    required String name,
+    required String email,
+    required String hashed_password,
+    required String tel,
+    required int prefecture_id,
+    required String address,
+  }) => UsersSignupProvider._(
+    argument: (
+      name: name,
+      email: email,
+      hashed_password: hashed_password,
+      tel: tel,
+      prefecture_id: prefecture_id,
+      address: address,
+    ),
+    from: this,
+  );
+
+  @override
+  String toString() => r'usersSignupProvider';
+}
 
 @ProviderFor(updateUser)
 const updateUserProvider = UpdateUserFamily._();
 
-/// ユーザー情報を更新するProvider
-///
-/// [id]: 更新するユーザーのID
-/// [name]: ユーザー名
-/// [email]: メールアドレス
-/// [hashed_password]: ハッシュ化されたパスワード
-/// [tel]: 電話番号
-/// [prefecture_id]: 都道府県ID
-/// [address]: 住所
-///
-/// 戻り値: 更新処理の結果
-
 final class UpdateUserProvider
     extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
     with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
-  /// ユーザー情報を更新するProvider
-  ///
-  /// [id]: 更新するユーザーのID
-  /// [name]: ユーザー名
-  /// [email]: メールアドレス
-  /// [hashed_password]: ハッシュ化されたパスワード
-  /// [tel]: 電話番号
-  /// [prefecture_id]: 都道府県ID
-  /// [address]: 住所
-  ///
-  /// 戻り値: 更新処理の結果
   const UpdateUserProvider._({
     required UpdateUserFamily super.from,
     required ({
@@ -613,18 +1034,6 @@ final class UpdateUserProvider
 
 String _$updateUserHash() => r'834443eec23a3f2d3d0745ea996c6a4fec6c704c';
 
-/// ユーザー情報を更新するProvider
-///
-/// [id]: 更新するユーザーのID
-/// [name]: ユーザー名
-/// [email]: メールアドレス
-/// [hashed_password]: ハッシュ化されたパスワード
-/// [tel]: 電話番号
-/// [prefecture_id]: 都道府県ID
-/// [address]: 住所
-///
-/// 戻り値: 更新処理の結果
-
 final class UpdateUserFamily extends $Family
     with
         $FunctionalFamilyOverride<
@@ -647,18 +1056,6 @@ final class UpdateUserFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
-
-  /// ユーザー情報を更新するProvider
-  ///
-  /// [id]: 更新するユーザーのID
-  /// [name]: ユーザー名
-  /// [email]: メールアドレス
-  /// [hashed_password]: ハッシュ化されたパスワード
-  /// [tel]: 電話番号
-  /// [prefecture_id]: 都道府県ID
-  /// [address]: 住所
-  ///
-  /// 戻り値: 更新処理の結果
 
   UpdateUserProvider call({
     required int id,
@@ -685,32 +1082,12 @@ final class UpdateUserFamily extends $Family
   String toString() => r'updateUserProvider';
 }
 
-/// パスワードを変更するProvider
-///
-/// [id]: パスワードを変更するユーザーのID
-/// [newPassword]: 新しいパスワード（ハッシュ化済み）
-///
-/// 戻り値: 変更処理の結果メッセージ
-
 @ProviderFor(changePassword)
 const changePasswordProvider = ChangePasswordFamily._();
-
-/// パスワードを変更するProvider
-///
-/// [id]: パスワードを変更するユーザーのID
-/// [newPassword]: 新しいパスワード（ハッシュ化済み）
-///
-/// 戻り値: 変更処理の結果メッセージ
 
 final class ChangePasswordProvider
     extends $FunctionalProvider<AsyncValue<String>, String, FutureOr<String>>
     with $FutureModifier<String>, $FutureProvider<String> {
-  /// パスワードを変更するProvider
-  ///
-  /// [id]: パスワードを変更するユーザーのID
-  /// [newPassword]: 新しいパスワード（ハッシュ化済み）
-  ///
-  /// 戻り値: 変更処理の結果メッセージ
   const ChangePasswordProvider._({
     required ChangePasswordFamily super.from,
     required ({int id, String newPassword}) super.argument,
@@ -760,13 +1137,6 @@ final class ChangePasswordProvider
 
 String _$changePasswordHash() => r'742a55dbde4b93d314f1a83e1b337d8c528ea7f5';
 
-/// パスワードを変更するProvider
-///
-/// [id]: パスワードを変更するユーザーのID
-/// [newPassword]: 新しいパスワード（ハッシュ化済み）
-///
-/// 戻り値: 変更処理の結果メッセージ
-
 final class ChangePasswordFamily extends $Family
     with
         $FunctionalFamilyOverride<
@@ -782,13 +1152,6 @@ final class ChangePasswordFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// パスワードを変更するProvider
-  ///
-  /// [id]: パスワードを変更するユーザーのID
-  /// [newPassword]: 新しいパスワード（ハッシュ化済み）
-  ///
-  /// 戻り値: 変更処理の結果メッセージ
-
   ChangePasswordProvider call({required int id, required String newPassword}) =>
       ChangePasswordProvider._(
         argument: (id: id, newPassword: newPassword),
@@ -799,16 +1162,163 @@ final class ChangePasswordFamily extends $Family
   String toString() => r'changePasswordProvider';
 }
 
-/// 都道府県一覧を取得するProvider
-///
-/// 戻り値: 都道府県情報のリスト
+@ProviderFor(managementSignin)
+const managementSigninProvider = ManagementSigninFamily._();
+
+final class ManagementSigninProvider
+    extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
+    with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+  const ManagementSigninProvider._({
+    required ManagementSigninFamily super.from,
+    required ({String name, String hashed_password}) super.argument,
+  }) : super(
+         retry: null,
+         name: r'managementSigninProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$managementSigninHash();
+
+  @override
+  String toString() {
+    return r'managementSigninProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<dynamic> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<dynamic> create(Ref ref) {
+    final argument = this.argument as ({String name, String hashed_password});
+    return managementSignin(
+      ref,
+      name: argument.name,
+      hashed_password: argument.hashed_password,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is ManagementSigninProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$managementSigninHash() => r'c2e6667d70e855ef9dc027b916bac49758149da3';
+
+final class ManagementSigninFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<dynamic>,
+          ({String name, String hashed_password})
+        > {
+  const ManagementSigninFamily._()
+    : super(
+        retry: null,
+        name: r'managementSigninProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  ManagementSigninProvider call({
+    required String name,
+    required String hashed_password,
+  }) => ManagementSigninProvider._(
+    argument: (name: name, hashed_password: hashed_password),
+    from: this,
+  );
+
+  @override
+  String toString() => r'managementSigninProvider';
+}
+
+@ProviderFor(login)
+const loginProvider = LoginFamily._();
+
+final class LoginProvider
+    extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
+    with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+  const LoginProvider._({
+    required LoginFamily super.from,
+    required ({String email, String password}) super.argument,
+  }) : super(
+         retry: null,
+         name: r'loginProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$loginHash();
+
+  @override
+  String toString() {
+    return r'loginProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<dynamic> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<dynamic> create(Ref ref) {
+    final argument = this.argument as ({String email, String password});
+    return login(ref, email: argument.email, password: argument.password);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is LoginProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$loginHash() => r'be4c4c8bf5c2bcddc2966683f386ea870f9e8e21';
+
+final class LoginFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<dynamic>,
+          ({String email, String password})
+        > {
+  const LoginFamily._()
+    : super(
+        retry: null,
+        name: r'loginProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  LoginProvider call({required String email, required String password}) =>
+      LoginProvider._(argument: (email: email, password: password), from: this);
+
+  @override
+  String toString() => r'loginProvider';
+}
 
 @ProviderFor(prefectures)
 const prefecturesProvider = PrefecturesProvider._();
-
-/// 都道府県一覧を取得するProvider
-///
-/// 戻り値: 都道府県情報のリスト
 
 final class PrefecturesProvider
     extends
@@ -818,9 +1328,6 @@ final class PrefecturesProvider
           FutureOr<List<dynamic>>
         >
     with $FutureModifier<List<dynamic>>, $FutureProvider<List<dynamic>> {
-  /// 都道府県一覧を取得するProvider
-  ///
-  /// 戻り値: 都道府県情報のリスト
   const PrefecturesProvider._()
     : super(
         from: null,
