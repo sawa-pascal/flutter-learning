@@ -1,23 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../myApiProvider.dart'; // msApiProvider.dartを使用
+import '../../myApiProvider.dart';
 
-class CategoriesCreatorPage extends ConsumerStatefulWidget {
-  const CategoriesCreatorPage({Key? key}) : super(key: key);
+class CategoriesEditPage extends ConsumerStatefulWidget {
+  final Map<String, dynamic> category;
+
+  const CategoriesEditPage({
+    Key? key,
+    required this.category,
+  }) : super(key: key);
 
   @override
-  ConsumerState<CategoriesCreatorPage> createState() => _CategoriesCreatorPageState();
+  ConsumerState<CategoriesEditPage> createState() => _CategoriesEditPageState();
 }
 
-class _CategoriesCreatorPageState extends ConsumerState<CategoriesCreatorPage> {
+class _CategoriesEditPageState extends ConsumerState<CategoriesEditPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _displayOrderController = TextEditingController();
+  late TextEditingController _nameController;
+  late TextEditingController _displayOrderController;
 
   bool _isSubmitting = false;
   String? _errorText;
   String? _successText;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.category['name']?.toString() ?? '');
+    _displayOrderController = TextEditingController(text: widget.category['display_order']?.toString() ?? '');
+  }
 
   @override
   void dispose() {
@@ -26,7 +38,7 @@ class _CategoriesCreatorPageState extends ConsumerState<CategoriesCreatorPage> {
     super.dispose();
   }
 
-  Future<void> _submitCategory() async {
+  Future<void> _submitEdit() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -40,24 +52,28 @@ class _CategoriesCreatorPageState extends ConsumerState<CategoriesCreatorPage> {
       final String displayOrderStr = _displayOrderController.text.trim();
       final int displayOrder = int.parse(displayOrderStr);
 
-      final result = await ref.read(createCategoriesProvider(
+      // カテゴリID
+      final int id = widget.category['id'];
+
+      // 編集API呼び出し
+      final result = await ref.read(updateCategoriesProvider(
+        id: id,
         name: name,
         display_order: displayOrder,
       ).future);
 
       if (result != null && (result['success'] == true || result['status'] == 'success')) {
-        // カテゴリー登録が成功した場合、直前の画面に戻る
         if (mounted) {
-          Navigator.of(context).pop(true); // trueを返して遷移元で再取得などが可能
+          Navigator.of(context).pop(true); // trueを返して編集反映
         }
       } else {
         setState(() {
-          _errorText = '登録に失敗しました: ${result?['message'] ?? '不明なエラー'}';
+          _errorText = '編集に失敗しました: ${result?['message'] ?? '不明なエラー'}';
         });
       }
     } catch (e) {
       setState(() {
-        _errorText = 'カテゴリーの登録に失敗しました: $e';
+        _errorText = '編集処理中にエラー: $e';
       });
     } finally {
       if (mounted) {
@@ -72,7 +88,7 @@ class _CategoriesCreatorPageState extends ConsumerState<CategoriesCreatorPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('カテゴリー登録'),
+        title: const Text('カテゴリー編集'),
       ),
       body: SafeArea(
         child: Center(
@@ -126,7 +142,6 @@ class _CategoriesCreatorPageState extends ConsumerState<CategoriesCreatorPage> {
                         ),
                         keyboardType: TextInputType.number,
                         inputFormatters: [
-                          // 数字(半角のみ)入力のみ許可
                           FilteringTextInputFormatter.digitsOnly,
                         ],
                         validator: (value) {
@@ -153,10 +168,15 @@ class _CategoriesCreatorPageState extends ConsumerState<CategoriesCreatorPage> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Icon(Icons.check),
-                          label: Text(_isSubmitting ? '登録中...' : '登録する'),
-                          onPressed: _isSubmitting ? null : _submitCategory,
+                              : const Icon(Icons.save),
+                          label: Text(_isSubmitting ? '編集中...' : '編集を保存'),
+                          onPressed: _isSubmitting ? null : _submitEdit,
                         ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextButton(
+                        onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+                        child: const Text('キャンセル'),
                       ),
                     ],
                   ),

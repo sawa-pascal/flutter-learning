@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_application_ec_site/managementSystemWidget/categories/categoriesList.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'msApiProvider.dart';
+import '../myApiProvider.dart';
 
 class ManagementSystemWidget extends ConsumerStatefulWidget {
   const ManagementSystemWidget({Key? key}) : super(key: key);
@@ -134,16 +134,6 @@ class _ManagementSystemWidgetState
                             'パスワード: testUser',
                             style: TextStyle(fontSize: 16),
                           ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.copy),
-                          tooltip: 'コピー',
-                          onPressed: () {
-                            Clipboard.setData(const ClipboardData(text: 'testUser'));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('パスワードをコピーしました')),
-                            );
-                          },
                         ),
                       ],
                     ),
