@@ -28,8 +28,7 @@ typedef OnCategorySelected = void Function(int categoryId, String categoryName);
 const double _drawerHeaderHeight = 100.0;
 
 /// ドロワーヘッダーの画像URL
-const String _drawerHeaderImageUrl =
-    'http://3.107.37.75/images/stationery.jpeg';
+const String _drawerHeaderImageUrl = imageBaseUrl + 'stationery.jpeg';
 
 /// カテゴリーセクションのパディング
 const EdgeInsets _categorySectionPadding = EdgeInsets.symmetric(
@@ -78,11 +77,15 @@ class AppDrawer extends ConsumerWidget {
 
             ListTile(
               title: Text('管理画面を開く'),
-              leading: const Icon(Icons.admin_panel_settings, color: Colors.blue),
-              onTap: () => Navigator.of(
-                context,
-                rootNavigator: true,
-              ).push(MaterialPageRoute(builder: (context) => const ManagementSystemWidget())),
+              leading: const Icon(
+                Icons.admin_panel_settings,
+                color: Colors.blue,
+              ),
+              onTap: () => Navigator.of(context, rootNavigator: true).push(
+                MaterialPageRoute(
+                  builder: (context) => const ManagementSystemWidget(),
+                ),
+              ),
             ),
           ],
         ),
@@ -205,6 +208,17 @@ AppBar buildAppBar(
   return AppBar(
     title: _AppBarTitle(title: title),
     centerTitle: true,
+    leading: Builder(
+      builder: (BuildContext context) {
+        return IconButton(
+          icon: Icon(Icons.menu),
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
+          tooltip: 'メニュー',
+        );
+      },
+    ),
     actions: [
       Align(
         alignment: Alignment.centerLeft,

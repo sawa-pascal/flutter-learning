@@ -144,7 +144,7 @@ final class CreateCategoriesProvider
   }
 }
 
-String _$createCategoriesHash() => r'53200ac1bbc8055b6f648cb1220225e636702d92';
+String _$createCategoriesHash() => r'44fcc366962a49bf41ade121d4e348025f5dddfc';
 
 final class CreateCategoriesFamily extends $Family
     with

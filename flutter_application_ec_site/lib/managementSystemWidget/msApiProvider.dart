@@ -12,10 +12,10 @@ part 'msApiProvider.g.dart';
 // ============================================================================
 
 /// APIサーバーのベースURL（プロトコルなし）
-const String apiBaseUrl = '3.107.37.75';
+const String apiBaseUrl = '3.25.105.3';
 
 /// 画像リソースのベースURL
-const String imageBaseUrl = 'http://3.107.37.75/images/';
+const String imageBaseUrl = 'http://3.25.105.3/images/';
 
 /// HTTPステータスコード: 成功
 const int httpStatusCodeSuccess = 200;

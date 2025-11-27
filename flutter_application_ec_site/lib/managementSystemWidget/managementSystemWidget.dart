@@ -135,16 +135,6 @@ class _ManagementSystemWidgetState
                             style: TextStyle(fontSize: 16),
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.copy),
-                          tooltip: 'コピー',
-                          onPressed: () {
-                            Clipboard.setData(const ClipboardData(text: 'testUser'));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('パスワードをコピーしました')),
-                            );
-                          },
-                        ),
                       ],
                     ),
                     const SizedBox(height: 44),
