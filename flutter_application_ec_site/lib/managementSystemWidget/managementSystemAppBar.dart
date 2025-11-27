@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_ec_site/managementSystemWidget/categories/categoriesList.dart';
 import 'package:flutter_application_ec_site/managementSystemWidget/items/itemsList.dart';
+import 'package:flutter_application_ec_site/managementSystemWidget/users/usersList.dart';
 import 'package:flutter_application_ec_site/myHomePage.dart';
 
 /// 共通Drawer（管理画面用）
@@ -48,8 +49,9 @@ class ManagementSystemDrawer extends StatelessWidget {
               leading: const Icon(Icons.person),
               title: const Text('ユーザー情報'),
               onTap: () {
-                Navigator.of(context).pop(); // Drawer を閉じる
-                // do nothing, as it's usually the default page
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => UsersListPage()),
+                );
               },
             ),
             ListTile(

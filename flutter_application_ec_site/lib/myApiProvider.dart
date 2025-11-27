@@ -70,18 +70,17 @@ Future<T> _handleRequest<T>({
 @riverpod
 Future<List<dynamic>> categories(Ref ref, {int? id}) async {
   final uri = id != null
-      ? Uri.http(apiBaseUrl, '/api/categories/get_categories_list.php', {'id': id.toString()})
+      ? Uri.http(apiBaseUrl, '/api/categories/get_categories_list.php', {
+          'id': id.toString(),
+        })
       : Uri.http(apiBaseUrl, '/api/categories/get_categories_list.php');
   return _handleRequest<List<dynamic>>(
-    request: () => http.Client().get(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-    ),
+    request: () =>
+        http.Client().get(uri, headers: {'Content-Type': 'application/json'}),
     onSuccess: (json) => json is List ? json : [],
     key: 'items',
   );
 }
-
 
 @riverpod
 Future<dynamic> createCategories(
@@ -231,12 +230,14 @@ Future<dynamic> uploadItemImage(
   }
 
   // 画像ファイル名を指定（デフォルト名をつけて送るとサーバー側で$_FILES['upfile']['name']が空にならない）
-  request.files.add(http.MultipartFile.fromBytes(
-    'upfile',
-    imageBytes,
-    filename: 'upload.png', // または 'image.jpg'
-    contentType: http.MediaType('image', 'png'), // contentTypeは省略可能だが付けると確実
-  ));
+  request.files.add(
+    http.MultipartFile.fromBytes(
+      'upfile',
+      imageBytes,
+      filename: 'upload.png', // または 'image.jpg'
+      contentType: http.MediaType('image', 'png'), // contentTypeは省略可能だが付けると確実
+    ),
+  );
 
   final streamedResponse = await request.send().timeout(httpTimeoutDuration);
   final response = await http.Response.fromStream(streamedResponse);
@@ -308,8 +309,25 @@ Future<List<dynamic>> purchaseHistory(Ref ref, int user_id) async {
 
 // ========= /api/users/ =========
 
+// ユーザー一覧取得
 @riverpod
-Future<dynamic> usersSignup(
+Future<Map<String, dynamic>> usersList(Ref ref, {int? id}) async {
+  return _handleRequest<Map<String, dynamic>>(
+    request: () => http.Client().get(
+      id != null
+          ? Uri.http(apiBaseUrl, '/api/users/get_users_list.php', {
+              'id': id.toString(),
+            })
+          : Uri.http(apiBaseUrl, '/api/users/get_users_list.php'),
+      headers: {'Content-Type': 'application/json'},
+    ),
+    onSuccess: (json) => json is Map<String, dynamic> ? json : {},
+  );
+}
+
+// ユーザー新規登録
+@riverpod
+Future<dynamic> createUsers(
   Ref ref, {
   required String name,
   required String email,
@@ -320,7 +338,7 @@ Future<dynamic> usersSignup(
 }) async {
   return _handleRequest<dynamic>(
     request: () => http.Client().post(
-      Uri.http(apiBaseUrl, '/api/users/signup.php'),
+      Uri.http(apiBaseUrl, '/api/users/create_users.php'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'name': name,
@@ -332,10 +350,10 @@ Future<dynamic> usersSignup(
       }),
     ),
     onSuccess: (json) => json ?? {},
-    key: 'user',
   );
 }
 
+// ユーザー情報更新
 @riverpod
 Future<dynamic> updateUser(
   Ref ref, {
@@ -365,6 +383,20 @@ Future<dynamic> updateUser(
   );
 }
 
+// ユーザー削除
+@riverpod
+Future<dynamic> deleteUser(Ref ref, {required int id}) async {
+  return _handleRequest<dynamic>(
+    request: () => http.Client().post(
+      Uri.http(apiBaseUrl, '/api/users/delete_user.php'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'id': id}),
+    ),
+    onSuccess: (json) => json ?? {},
+  );
+}
+
+// パスワード変更
 @riverpod
 Future<String> changePassword(
   Ref ref, {
