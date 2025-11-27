@@ -72,7 +72,7 @@ class _CategoriesListPageState extends ConsumerState<CategoriesListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final categoriesAsync = ref.watch(categoriesProvider);
+    final categoriesAsync = ref.watch(categoriesProvider());
 
     List<dynamic> filtered = [];
     int pageCount = 0;
@@ -146,7 +146,7 @@ class _CategoriesListPageState extends ConsumerState<CategoriesListPage> {
                                     MaterialPageRoute(
                                       builder: (context) =>
                                           CategoriesDetailPage(
-                                            category: category,
+                                            categoryId: category['id'] as int,
                                           ),
                                     ),
                                   ),

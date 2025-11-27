@@ -10,7 +10,7 @@ part of 'myApiProvider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(categories)
-const categoriesProvider = CategoriesProvider._();
+const categoriesProvider = CategoriesFamily._();
 
 final class CategoriesProvider
     extends
@@ -20,19 +20,26 @@ final class CategoriesProvider
           FutureOr<List<dynamic>>
         >
     with $FutureModifier<List<dynamic>>, $FutureProvider<List<dynamic>> {
-  const CategoriesProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'categoriesProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  const CategoriesProvider._({
+    required CategoriesFamily super.from,
+    required int? super.argument,
+  }) : super(
+         retry: null,
+         name: r'categoriesProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$categoriesHash();
+
+  @override
+  String toString() {
+    return r'categoriesProvider'
+        ''
+        '($argument)';
+  }
 
   @$internal
   @override
@@ -42,11 +49,40 @@ final class CategoriesProvider
 
   @override
   FutureOr<List<dynamic>> create(Ref ref) {
-    return categories(ref);
+    final argument = this.argument as int?;
+    return categories(ref, id: argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is CategoriesProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
   }
 }
 
-String _$categoriesHash() => r'5aaf292782a83131410a3e24d01619cd61ab5612';
+String _$categoriesHash() => r'e717c42f532106fb474dc994c6078cc098094e5f';
+
+final class CategoriesFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<List<dynamic>>, int?> {
+  const CategoriesFamily._()
+    : super(
+        retry: null,
+        name: r'categoriesProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  CategoriesProvider call({int? id}) =>
+      CategoriesProvider._(argument: id, from: this);
+
+  @override
+  String toString() => r'categoriesProvider';
+}
 
 @ProviderFor(createCategories)
 const createCategoriesProvider = CreateCategoriesFamily._();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_ec_site/managementSystemWidget/items/itemsCreator.dart';
 import 'package:flutter_application_ec_site/managementSystemWidget/items/itemsDetail.dart';
+import 'package:flutter_application_ec_site/managementSystemWidget/categories/categoriesDetail.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../myApiProvider.dart';
 import '../paging.dart'; // ← Paginationウィジェットをインポート
@@ -19,6 +20,7 @@ class _ItemsListPageState extends ConsumerState<ItemsListPage> {
   int _currentPage = 0;
   static const int _rowsPerPage = 10;
   int _cachedPageCount = 0; // ページ数をキャッシュ
+  int? _selectedCategoryId; // 選択中のカテゴリーID
 
   @override
   void dispose() {
@@ -70,6 +72,7 @@ class _ItemsListPageState extends ConsumerState<ItemsListPage> {
   @override
   Widget build(BuildContext context) {
     final itemsAsync = ref.watch(itemsProvider);
+    final categoriesAsync = ref.watch(categoriesProvider());
 
     List<dynamic> filtered = [];
     int pageCount = 0;
@@ -99,81 +102,143 @@ class _ItemsListPageState extends ConsumerState<ItemsListPage> {
               ),
             ),
             Expanded(
-              child: itemsAsync.when(
-                data: (items) {
-                  if (items == null || items.isEmpty) {
-                    filtered = [];
-                    pageCount = 0;
-                    paged = [];
-                    return const Center(child: Text('商品がありません'));
-                  }
-                  filtered = _filterItems(items);
-                  pageCount = _getPageCount(filtered.length);
-                  _cachedPageCount = pageCount;
-                  paged = _getPagedItems(
-                    filtered..sort((a, b) {
-                      final aId = a['id'];
-                      final bId = b['id'];
-                      if (aId is int && bId is int) {
-                        return aId.compareTo(bId);
-                      }
-                      return 0;
-                    }),
-                  );
-                  if (filtered.isEmpty) {
-                    return const Center(child: Text('該当する商品がありません'));
-                  }
-                  return Center(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
-                      child: DataTable(
-                        columns: const [
-                          DataColumn(label: Text('ID')),
-                          DataColumn(label: Text('商品名')),
-                          DataColumn(label: Text('カテゴリー')),
-                          DataColumn(label: Text('価格')),
-                          DataColumn(label: Text('在庫')),
-                        ],
-                        rows: paged.map<DataRow>((item) {
-                          return DataRow(
-                            cells: [
-                              DataCell(
-                                TextButton(
-                                  child: Text('${item['id'] ?? '-'}'),
-                                  onPressed: () => Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          ItemsDetailPage(item: item),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              DataCell(Text('${item['name'] ?? '-'}')),
-                              DataCell(Text('${item['category_id'] ?? '-'}')),
-                              DataCell(
-                                Text(
-                                  item['price'] != null
-                                      ? '¥${item['price']}'
-                                      : '-',
-                                ),
-                              ),
-                              DataCell(
-                                Text(
-                                  item['quantity'] != null
-                                      ? '${item['quantity']}'
-                                      : '-',
-                                ),
-                              ),
-                            ],
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  );
-                },
+              child: categoriesAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, stack) =>
-                    Center(child: Text('エラーが発生しました: $error')),
+                    Center(child: Text('カテゴリー情報の取得エラー: $error')),
+                data: (categories) {
+                  // Map<categoryId, categoryObject> を作っておく
+                  final Map<int, dynamic> categoryIdMap = {};
+                  if (categories is List) {
+                    for (var cat in categories) {
+                      final id = cat['id'];
+                      if (id is int) categoryIdMap[id] = cat;
+                    }
+                  }
+
+                  return itemsAsync.when(
+                    data: (items) {
+                      if (items == null || items.isEmpty) {
+                        filtered = [];
+                        pageCount = 0;
+                        paged = [];
+                        return const Center(child: Text('商品がありません'));
+                      }
+                      filtered = _filterItems(items);
+                      pageCount = _getPageCount(filtered.length);
+                      _cachedPageCount = pageCount;
+                      paged = _getPagedItems(
+                        filtered..sort((a, b) {
+                          final aId = a['id'];
+                          final bId = b['id'];
+                          if (aId is int && bId is int) {
+                            return aId.compareTo(bId);
+                          }
+                          return 0;
+                        }),
+                      );
+                      if (filtered.isEmpty) {
+                        return const Center(child: Text('該当する商品がありません'));
+                      }
+                      return Center(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.vertical,
+                          child: DataTable(
+                            columns: const [
+                              DataColumn(label: Text('ID')),
+                              DataColumn(label: Text('商品名')),
+                              DataColumn(label: Text('カテゴリー')),
+                              DataColumn(label: Text('価格')),
+                              DataColumn(label: Text('在庫')),
+                            ],
+                            rows: paged.map<DataRow>((item) {
+                              // カテゴリー名へ：item['category_id'] をカテゴリー名に変換、タップでカテゴリー詳細画面に遷移、選択状態を背景色で反転
+                              final categoryId = item['category_id'];
+                              String categoryName = '-';
+                              if (categoryId != null) {
+                                final cat = categoryIdMap[categoryId];
+                                if (cat != null &&
+                                    cat['name'] != null &&
+                                    cat['name'].toString().trim().isNotEmpty) {
+                                  categoryName = cat['name'].toString();
+                                }
+                              }
+
+                              final bool isCategorySelected =
+                                  _selectedCategoryId != null &&
+                                  categoryId != null &&
+                                  _selectedCategoryId == categoryId;
+
+                              return DataRow(
+                                cells: [
+                                  DataCell(
+                                    TextButton(
+                                      child: Text('${item['id'] ?? '-'}'),
+                                      onPressed: () =>
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  ItemsDetailPage(item: item),
+                                            ),
+                                          ),
+                                    ),
+                                  ),
+                                  DataCell(Text('${item['name'] ?? '-'}')),
+                                  DataCell(
+                                    TextButton(
+                                      child: Text('${categoryName ?? '-'}'),
+                                      onPressed: () {
+                                        setState(() {
+                                          _selectedCategoryId = categoryId;
+                                        });
+                                        if (categoryId != null) {
+                                          Navigator.of(context)
+                                              .push(
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      CategoriesDetailPage(
+                                                        categoryId: categoryId,
+                                                      ),
+                                                ),
+                                              )
+                                              .then((_) {
+                                                // 戻った時に選択解除
+                                                setState(() {
+                                                  _selectedCategoryId = null;
+                                                });
+                                              });
+                                        }
+                                      },
+                                    ),
+                                  ),
+
+                                  DataCell(
+                                    Text(
+                                      item['price'] != null
+                                          ? '¥${item['price']}'
+                                          : '-',
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Text(
+                                      item['quantity'] != null
+                                          ? '${item['quantity']}'
+                                          : '-',
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      );
+                    },
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (error, stack) =>
+                        Center(child: Text('エラーが発生しました: $error')),
+                  );
+                },
               ),
             ),
             // ページネーションを一番下に固定

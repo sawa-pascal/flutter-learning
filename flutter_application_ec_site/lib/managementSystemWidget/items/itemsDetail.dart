@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_ec_site/managementSystemWidget/categories/categoriesDetail.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../myApiProvider.dart';
 import 'itemsEdit.dart';
@@ -10,7 +11,7 @@ class ItemsDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final categoriesAsync = ref.watch(categoriesProvider);
+    final categoriesAsync = ref.watch(categoriesProvider());
 
     return Scaffold(
       appBar: AppBar(title: const Text('商品詳細'), centerTitle: true),
@@ -62,7 +63,59 @@ class ItemsDetailPage extends ConsumerWidget {
                           const SizedBox(height: 14),
                           _row('名前', item['name']?.toString() ?? ''),
                           const SizedBox(height: 14),
-                          _row('カテゴリー', categoryName),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                width: 100,
+                                child: Text(
+                                  'カテゴリー',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: StatefulBuilder(
+                                  builder: (context, setState) {
+                                    bool isPressed = false;
+                                    return InkWell(
+                                      borderRadius: BorderRadius.circular(6),
+                                      onTap: () {
+                                        setState(() => isPressed = false);
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (context) => CategoriesDetailPage(
+                                              categoryId: item['category_id'],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      onHighlightChanged: (v) => setState(() => isPressed = v),
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: isPressed
+                                              ? Colors.blue.withOpacity(0.18)
+                                              : Colors.blue.withOpacity(0),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          categoryName,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.blueGrey,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          overflow: TextOverflow.visible,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
                           const SizedBox(height: 14),
                           _row(
                             '価格',

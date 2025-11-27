@@ -19,7 +19,6 @@ class _ItemsEditPageState extends ConsumerState<ItemsEditPage> {
   late TextEditingController _nameController;
   late TextEditingController _priceController;
   late TextEditingController _stockController;
-  late TextEditingController _categoryIdController;
   late TextEditingController _descriptionController;
   late TextEditingController _imageUrlController;
 
@@ -31,6 +30,11 @@ class _ItemsEditPageState extends ConsumerState<ItemsEditPage> {
 
   File? _pickedImage;
   String? _uploadedImageUrl;
+
+  // カテゴリードロップダウン用
+  int? _selectedCategoryId;
+  List<Map<String, dynamic>> _categories = [];
+  bool _categoriesLoading = true;
 
   @override
   void initState() {
@@ -44,15 +48,45 @@ class _ItemsEditPageState extends ConsumerState<ItemsEditPage> {
     _stockController = TextEditingController(
       text: widget.item['quantity']?.toString() ?? '',
     );
-    _categoryIdController = TextEditingController(
-      text: widget.item['category_id']?.toString() ?? '',
-    );
     _descriptionController = TextEditingController(
       text: widget.item['description']?.toString() ?? '',
     );
     _imageUrlController = TextEditingController(
       text: widget.item['image_url']?.toString() ?? '',
     );
+    _selectedCategoryId = widget.item['category_id'] is int
+        ? widget.item['category_id'] as int
+        : int.tryParse(widget.item['category_id']?.toString() ?? '');
+
+    // カテゴリー一覧を取得
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    setState(() {
+      _categoriesLoading = true;
+    });
+    try {
+      final fetched = await ref.read(categoriesProvider().future);
+      if (mounted) {
+        setState(() {
+          // Null, Integer, Stringなどもしっかり対応
+          _categories = (fetched as List)
+              .where((c) => c is Map<String, dynamic>)
+              .map((c) => c as Map<String, dynamic>)
+              .toList();
+        });
+      }
+    } catch (e) {
+      // ignore error, but have empty categories
+      setState(() {
+        _categories = [];
+      });
+    } finally {
+      setState(() {
+        _categoriesLoading = false;
+      });
+    }
   }
 
   @override
@@ -60,7 +94,6 @@ class _ItemsEditPageState extends ConsumerState<ItemsEditPage> {
     _nameController.dispose();
     _priceController.dispose();
     _stockController.dispose();
-    _categoryIdController.dispose();
     _descriptionController.dispose();
     _imageUrlController.dispose();
     super.dispose();
@@ -98,15 +131,15 @@ class _ItemsEditPageState extends ConsumerState<ItemsEditPage> {
       final imageBytes = await _pickedImage!.readAsBytes();
       // カテゴリーIDからカテゴリー名を取得してアップロード時に渡す
       String categoryName = "";
-      final categoryId = int.tryParse(_categoryIdController.text.trim());
+      final categoryId = _selectedCategoryId;
       if (categoryId != null && mounted) {
-        // categoriesProvider は List<Map> を返す想定
-        final categories = await ref.read(categoriesProvider.future);
+        final categories = _categories;
+        // Fix: firstWhere should not return null for orElse, but a valid Map
         final category = categories.firstWhere(
           (c) => c['id'].toString() == categoryId.toString(),
-          orElse: () => null,
+          orElse: () => <String, dynamic>{},
         );
-        if (category != null && category['name'] != null) {
+        if (category.isNotEmpty && category['name'] != null) {
           categoryName = category['name'].toString();
         }
       }
@@ -142,6 +175,12 @@ class _ItemsEditPageState extends ConsumerState<ItemsEditPage> {
 
   Future<void> _submitEdit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedCategoryId == null) {
+      setState(() {
+        _errorText = 'カテゴリーを選択してください';
+      });
+      return;
+    }
 
     setState(() {
       _isSubmitting = true;
@@ -156,7 +195,7 @@ class _ItemsEditPageState extends ConsumerState<ItemsEditPage> {
           name: _nameController.text.trim(),
           price: int.tryParse(_priceController.text.trim())!,
           stock: int.tryParse(_stockController.text.trim())!,
-          category_id: int.tryParse(_categoryIdController.text.trim())!,
+          category_id: _selectedCategoryId!,
           description: _descriptionController.text.trim(),
           image_url: _uploadedImageUrl ?? _imageUrlController.text.trim(),
           origin_image_url: widget.item['image_url']?.toString() ?? '',
@@ -214,6 +253,42 @@ class _ItemsEditPageState extends ConsumerState<ItemsEditPage> {
     );
   }
 
+  Widget _categoryDropdownField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: _categoriesLoading
+          ? const LinearProgressIndicator()
+          : DropdownButtonFormField<int>(
+              value: _selectedCategoryId,
+              decoration: const InputDecoration(
+                labelText: 'カテゴリー',
+                border: OutlineInputBorder(),
+              ),
+              isExpanded: true,
+              items: _categories
+                  .map((category) {
+                    return DropdownMenuItem<int>(
+                      value: category['id'] is int ? category['id'] as int : int.tryParse(category['id']?.toString() ?? ''),
+                      child: Text(category['name']?.toString() ?? ''),
+                    );
+                  })
+                  .where((item) => item.value != null)
+                  .toList(),
+              onChanged: (val) {
+                setState(() {
+                  _selectedCategoryId = val;
+                });
+              },
+              validator: (categoryId) {
+                if (categoryId == null) {
+                  return 'カテゴリーを選択してください';
+                }
+                return null;
+              },
+            ),
+    );
+  }
+
   Widget _imageUploadSection() {
     final imageUrl = _uploadedImageUrl ?? _imageUrlController.text.trim();
     return Column(
@@ -229,7 +304,7 @@ class _ItemsEditPageState extends ConsumerState<ItemsEditPage> {
         ),
 
         const SizedBox(height: 10),
-        if (_pickedImage != null) ...{
+        if (_pickedImage != null)
           Padding(
             padding: const EdgeInsets.only(top: 5),
             child: ClipRRect(
@@ -241,8 +316,8 @@ class _ItemsEditPageState extends ConsumerState<ItemsEditPage> {
                 fit: BoxFit.contain,
               ),
             ),
-          ),
-        } else if (imageUrl.isNotEmpty)
+          )
+        else if (imageUrl.isNotEmpty)
           ClipRRect(
             borderRadius: BorderRadius.circular(6),
             child: Image.network(
@@ -299,22 +374,7 @@ class _ItemsEditPageState extends ConsumerState<ItemsEditPage> {
                           return null;
                         },
                       ),
-                      _field(
-                        controller: _categoryIdController,
-                        label: 'カテゴリー',
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        validator: (val) {
-                          if (val == null || val.isEmpty) {
-                            return 'カテゴリーを入力してください';
-                          }
-                          final n = int.tryParse(val);
-                          if (n == null || n < 0) return '正しいカテゴリーを入力してください';
-                          return null;
-                        },
-                      ),
+                      _categoryDropdownField(),
                       _field(
                         controller: _priceController,
                         label: '価格（円）',

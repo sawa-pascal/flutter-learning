@@ -68,15 +68,20 @@ Future<T> _handleRequest<T>({
 // ========= /api/categories/ =========
 
 @riverpod
-Future<List<dynamic>> categories(Ref ref) async {
+Future<List<dynamic>> categories(Ref ref, {int? id}) async {
+  final uri = id != null
+      ? Uri.http(apiBaseUrl, '/api/categories/get_categories_list.php', {'id': id.toString()})
+      : Uri.http(apiBaseUrl, '/api/categories/get_categories_list.php');
   return _handleRequest<List<dynamic>>(
     request: () => http.Client().get(
-      Uri.http(apiBaseUrl, '/api/categories/get_categories_list.php'),
+      uri,
+      headers: {'Content-Type': 'application/json'},
     ),
     onSuccess: (json) => json is List ? json : [],
     key: 'items',
   );
 }
+
 
 @riverpod
 Future<dynamic> createCategories(

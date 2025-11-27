@@ -66,7 +66,7 @@ class _ItemListState extends ConsumerState<ItemList> {
 
   @override
   Widget build(BuildContext context) {
-    final categoriesAsync = ref.watch(categoriesProvider);
+    final categoriesAsync = ref.watch(categoriesProvider());
 
     return categoriesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),

@@ -65,7 +65,7 @@ class _ItemsCreatorPageState extends ConsumerState<ItemsCreatorPage> {
       _categoriesLoading = true;
     });
     try {
-      final catResult = await ref.read(categoriesProvider.future);
+      final catResult = await ref.read(categoriesProvider().future);
       if (catResult != null && catResult is List) {
         setState(() {
           _categories = catResult;
