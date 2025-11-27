@@ -68,15 +68,20 @@ Future<T> _handleRequest<T>({
 // ========= /api/categories/ =========
 
 @riverpod
-Future<List<dynamic>> categories(Ref ref) async {
+Future<List<dynamic>> categories(Ref ref, {int? id}) async {
+  final uri = id != null
+      ? Uri.http(apiBaseUrl, '/api/categories/get_categories_list.php', {'id': id.toString()})
+      : Uri.http(apiBaseUrl, '/api/categories/get_categories_list.php');
   return _handleRequest<List<dynamic>>(
     request: () => http.Client().get(
-      Uri.http(apiBaseUrl, '/api/categories/get_categories_list.php'),
+      uri,
+      headers: {'Content-Type': 'application/json'},
     ),
     onSuccess: (json) => json is List ? json : [],
     key: 'items',
   );
 }
+
 
 @riverpod
 Future<dynamic> createCategories(
@@ -105,17 +110,18 @@ Future<dynamic> updateCategories(
     request: () => http.Client().post(
       Uri.http(apiBaseUrl, '/api/categories/update_categories.php'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'id': id, 'name': name, 'display_order': display_order}),
+      body: jsonEncode({
+        'id': id,
+        'name': name,
+        'display_order': display_order,
+      }),
     ),
     onSuccess: (json) => json ?? {},
   );
 }
 
 @riverpod
-Future<dynamic> deleteCategories(
-  Ref ref, {
-  required int id,
-}) async {
+Future<dynamic> deleteCategories(Ref ref, {required int id}) async {
   return _handleRequest<dynamic>(
     request: () => http.Client().post(
       Uri.http(apiBaseUrl, '/api/categories/delete_categories.php'),
@@ -147,7 +153,7 @@ Future<dynamic> createItems(
   required int price,
   required int stock,
   required String description,
-  required String image,
+  required String image_url,
 }) async {
   return _handleRequest<dynamic>(
     request: () => http.Client().post(
@@ -159,7 +165,7 @@ Future<dynamic> createItems(
         'price': price,
         'stock': stock,
         'description': description,
-        'image': image,
+        'image_url': image_url,
       }),
     ),
     onSuccess: (json) => json ?? {},
@@ -175,7 +181,8 @@ Future<dynamic> updateItems(
   required int price,
   required int stock,
   required String description,
-  required String image,
+  required String image_url,
+  String? origin_image_url,
 }) async {
   return _handleRequest<dynamic>(
     request: () => http.Client().post(
@@ -188,7 +195,8 @@ Future<dynamic> updateItems(
         'price': price,
         'stock': stock,
         'description': description,
-        'image': image,
+        'image_url': image_url,
+        'origin_image_url': origin_image_url ?? '',
       }),
     ),
     onSuccess: (json) => json ?? {},
@@ -196,10 +204,7 @@ Future<dynamic> updateItems(
 }
 
 @riverpod
-Future<dynamic> deleteItems(
-  Ref ref, {
-  required int id,
-}) async {
+Future<dynamic> deleteItems(Ref ref, {required int id}) async {
   return _handleRequest<dynamic>(
     request: () => http.Client().post(
       Uri.http(apiBaseUrl, '/api/items/delete_items.php'),
@@ -208,6 +213,44 @@ Future<dynamic> deleteItems(
     ),
     onSuccess: (json) => json ?? {},
   );
+}
+
+@riverpod
+Future<dynamic> uploadItemImage(
+  Ref ref, {
+  required String categoryName,
+  String? imageUrl,
+  required List<int> imageBytes,
+}) async {
+  // マルチパートで画像データを送信
+  var uri = Uri.http(apiBaseUrl, '/api/items/upload_item_image.php');
+  var request = http.MultipartRequest('POST', uri);
+  request.fields['category_name'] = categoryName;
+  if (imageUrl != null) {
+    request.fields['image_url'] = imageUrl; // 既存画像URL(空OK)
+  }
+
+  // 画像ファイル名を指定（デフォルト名をつけて送るとサーバー側で$_FILES['upfile']['name']が空にならない）
+  request.files.add(http.MultipartFile.fromBytes(
+    'upfile',
+    imageBytes,
+    filename: 'upload.png', // または 'image.jpg'
+    contentType: http.MediaType('image', 'png'), // contentTypeは省略可能だが付けると確実
+  ));
+
+  final streamedResponse = await request.send().timeout(httpTimeoutDuration);
+  final response = await http.Response.fromStream(streamedResponse);
+
+  if (response.statusCode == httpStatusCodeSuccess) {
+    try {
+      final jsonResponse = jsonDecode(response.body);
+      return jsonResponse;
+    } on FormatException catch (e) {
+      throw Exception('JSON解析エラー: ${e.message}');
+    }
+  } else {
+    throw Exception('サーバーエラー: HTTP ${response.statusCode}');
+  }
 }
 
 // ========= /api/sales/ =========
