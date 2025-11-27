@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_ec_site/managementSystemWidget/categories/categoriesList.dart';
+import 'package:flutter_application_ec_site/managementSystemWidget/items/itemsList.dart';
 import 'package:flutter_application_ec_site/myHomePage.dart';
 
 /// 共通Drawer（管理画面用）
@@ -28,16 +30,18 @@ class ManagementSystemDrawer extends StatelessWidget {
               leading: const Icon(Icons.category),
               title: const Text('カテゴリー登録'),
               onTap: () {
-                Navigator.of(context).pop(); // Drawer を閉じる
-                // do nothing, as it's usually the default page
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => CategoriesListPage()),
+                );
               },
             ),
             ListTile(
               leading: const Icon(Icons.inventory),
               title: const Text('在庫管理'),
               onTap: () {
-                Navigator.of(context).pop(); // Drawer を閉じる
-                // do nothing, as it's usually the default page
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => ItemsListPage()),
+                );
               },
             ),
             ListTile(
