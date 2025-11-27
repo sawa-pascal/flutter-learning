@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_ec_site/managementSystemWidget/categories/categoriesCreator.dart';
 import 'package:flutter_application_ec_site/managementSystemWidget/categories/categoriesDetail.dart';
-import 'package:flutter_application_ec_site/myHomePage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../myApiProvider.dart';
 import '../paging.dart'; // ← Paginationウィジェットをインポート
+import '../managementSystemAppBar.dart'; // 共通AppBarのインポート
 
 class CategoriesListPage extends ConsumerStatefulWidget {
   const CategoriesListPage({Key? key}) : super(key: key);
@@ -79,19 +79,8 @@ class _CategoriesListPageState extends ConsumerState<CategoriesListPage> {
     List<dynamic> paged = [];
 
     return Scaffold(
-      // AppBarに戻るボタンを表示しないために、自動で追加されるleadingを消す
-      appBar: AppBar(
-        title: const Text('カテゴリー一覧'),
-        automaticallyImplyLeading: false,
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => MyHomePage(title: 'S.A.アプリ'),
-            ),
-          ),
-          icon: const Icon(Icons.home),
-        ),
-      ),
+      drawer: ManagementSystemDrawer(),
+      appBar: managementSystemAppBar(context, title: 'カテゴリー一覧'), // 共通AppBarを使用
       body: SafeArea(
         child: Column(
           children: [
