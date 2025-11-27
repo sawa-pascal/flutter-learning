@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../myApiProvider.dart';
 import 'categoriesEdit.dart';
+import 'package:intl/intl.dart';
 
 class CategoriesDetailPage extends ConsumerStatefulWidget {
   final int categoryId;
@@ -14,6 +15,7 @@ class CategoriesDetailPage extends ConsumerStatefulWidget {
 
 class _CategoriesDetailPageState extends ConsumerState<CategoriesDetailPage> {
   bool _deleting = false;
+  final NumberFormat _numberFormat = NumberFormat("#,###");
 
   @override
   Widget build(BuildContext context) {
@@ -53,11 +55,11 @@ class _CategoriesDetailPageState extends ConsumerState<CategoriesDetailPage> {
                         style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 24),
-                      _row('ID', category['id']?.toString() ?? ''),
+                      _row('ID', _formatNumber(category['id'])),
                       const SizedBox(height: 14),
                       _row('名前', category['name']?.toString() ?? ''),
                       const SizedBox(height: 14),
-                      _row('表示順', category['display_order']?.toString() ?? ''),
+                      _row('表示順', _formatNumber(category['display_order'])),
                       const SizedBox(height: 14),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -191,6 +193,17 @@ class _CategoriesDetailPageState extends ConsumerState<CategoriesDetailPage> {
         ),
       ),
     );
+  }
+
+  String _formatNumber(dynamic value) {
+    if (value == null) return '';
+    if (value is num) return _numberFormat.format(value);
+    if (value is String) {
+      final parsed = num.tryParse(value);
+      if (parsed != null) return _numberFormat.format(parsed);
+      return value;
+    }
+    return value.toString();
   }
 
   Widget _row(String label, String value) {

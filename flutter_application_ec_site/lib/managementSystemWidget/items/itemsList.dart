@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../myApiProvider.dart';
 import '../paging.dart'; // ← Paginationウィジェットをインポート
 import '../managementSystemAppBar.dart'; // 共通AppBarのインポート
+import 'package:intl/intl.dart'; // ← 追加: 数値フォーマット用
 
 class ItemsListPage extends ConsumerStatefulWidget {
   const ItemsListPage({Key? key}) : super(key: key);
@@ -20,7 +21,10 @@ class _ItemsListPageState extends ConsumerState<ItemsListPage> {
   int _currentPage = 0;
   static const int _rowsPerPage = 10;
   int _cachedPageCount = 0; // ページ数をキャッシュ
-  int? _selectedCategoryId; // 選択中のカテゴリーID
+  int? _selectedCategoryId; // 選択中のカテゴリーID（行選択）
+  int? _filterCategoryId; // フィルタ用カテゴリーID
+
+  final NumberFormat _numberFormat = NumberFormat("#,###"); // ← 追加: カンマ区切り用
 
   @override
   void dispose() {
@@ -38,12 +42,22 @@ class _ItemsListPageState extends ConsumerState<ItemsListPage> {
   }
 
   List<dynamic> _filterItems(List<dynamic> items) {
-    if (_searchText.isEmpty) return items;
-    final query = _searchText.toLowerCase();
-    return items.where((item) {
-      final name = (item['name'] ?? '').toString().toLowerCase();
-      return name.contains(query);
-    }).toList();
+    var filteredList = items;
+    // カテゴリIDでフィルタ
+    if (_filterCategoryId != null) {
+      filteredList = filteredList
+          .where((item) => item['category_id'] == _filterCategoryId)
+          .toList();
+    }
+    // 名前でフィルタ
+    if (_searchText.isNotEmpty) {
+      final query = _searchText.toLowerCase();
+      filteredList = filteredList.where((item) {
+        final name = (item['name'] ?? '').toString().toLowerCase();
+        return name.contains(query);
+      }).toList();
+    }
+    return filteredList;
   }
 
   List<dynamic> _getPagedItems(List<dynamic> items) {
@@ -69,6 +83,18 @@ class _ItemsListPageState extends ConsumerState<ItemsListPage> {
     });
   }
 
+  String _formatNumber(dynamic number) {
+    if (number == null) return '-';
+    num? n;
+    if (number is num) {
+      n = number;
+    } else {
+      n = num.tryParse(number.toString());
+    }
+    if (n == null) return '-';
+    return _numberFormat.format(n);
+  }
+
   @override
   Widget build(BuildContext context) {
     final itemsAsync = ref.watch(itemsProvider);
@@ -86,19 +112,70 @@ class _ItemsListPageState extends ConsumerState<ItemsListPage> {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (val) {
-                  setState(() {
-                    _searchText = val;
-                    _currentPage = 0; // Reset page on search
-                  });
-                },
-                decoration: const InputDecoration(
-                  labelText: '商品名で検索',
-                  prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(),
-                ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (val) {
+                        setState(() {
+                          _searchText = val;
+                          _currentPage = 0; // Reset page on search
+                        });
+                      },
+                      decoration: const InputDecoration(
+                        labelText: '商品名で検索',
+                        prefixIcon: Icon(Icons.search),
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // --- カテゴリードロップダウン追加 ---
+                  categoriesAsync.when(
+                    data: (categories) {
+                      List<DropdownMenuItem<int?>> categoryItems = [
+                        const DropdownMenuItem<int?>(
+                          value: null,
+                          child: Text('すべてのカテゴリー'),
+                        )
+                      ];
+                      if (categories is List) {
+                        for (var cat in categories) {
+                          if (cat['id'] != null) {
+                            categoryItems.add(DropdownMenuItem<int?>(
+                              value: cat['id'],
+                              child: Text(cat['name']?.toString() ?? ''),
+                            ));
+                          }
+                        }
+                      }
+                      return DropdownButton<int?>(
+                        value: _filterCategoryId,
+                        isDense: true,
+                        underline: Container(height: 1, color: Colors.grey.shade300),
+                        onChanged: (val) {
+                          setState(() {
+                            _filterCategoryId = val;
+                            _currentPage = 0;
+                          });
+                        },
+                        items: categoryItems,
+                      );
+                    },
+                    loading: () => const SizedBox(
+                      width: 36,
+                      height: 36,
+                      child: Padding(
+                        padding: EdgeInsets.only(left: 8),
+                        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                      ),
+                    ),
+                    error: (error, stack) => const SizedBox(),
+                  ),
+                  // --- ドロップダウンここまで ---
+                ],
               ),
             ),
             Expanded(
@@ -140,95 +217,102 @@ class _ItemsListPageState extends ConsumerState<ItemsListPage> {
                       if (filtered.isEmpty) {
                         return const Center(child: Text('該当する商品がありません'));
                       }
+                      // 横スクロールを可能にするためにスクロールビューでラップ
                       return Center(
                         child: SingleChildScrollView(
-                          scrollDirection: Axis.vertical,
-                          child: DataTable(
-                            columns: const [
-                              DataColumn(label: Text('ID')),
-                              DataColumn(label: Text('商品名')),
-                              DataColumn(label: Text('カテゴリー')),
-                              DataColumn(label: Text('価格')),
-                              DataColumn(label: Text('在庫')),
-                            ],
-                            rows: paged.map<DataRow>((item) {
-                              // カテゴリー名へ：item['category_id'] をカテゴリー名に変換、タップでカテゴリー詳細画面に遷移、選択状態を背景色で反転
-                              final categoryId = item['category_id'];
-                              String categoryName = '-';
-                              if (categoryId != null) {
-                                final cat = categoryIdMap[categoryId];
-                                if (cat != null &&
-                                    cat['name'] != null &&
-                                    cat['name'].toString().trim().isNotEmpty) {
-                                  categoryName = cat['name'].toString();
+                          scrollDirection: Axis.horizontal,
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.vertical,
+                            child: DataTable(
+                              columns: const [
+                                DataColumn(label: Text('ID')),
+                                DataColumn(label: Text('商品名')),
+                                DataColumn(label: Text('カテゴリー')),
+                                DataColumn(label: Text('価格')),
+                                DataColumn(label: Text('在庫')),
+                              ],
+                              rows: paged.map<DataRow>((item) {
+                                // カテゴリー名へ：item['category_id'] をカテゴリー名に変換、タップでカテゴリー詳細画面に遷移、選択状態を背景色で反転
+                                final categoryId = item['category_id'];
+                                String categoryName = '-';
+                                if (categoryId != null) {
+                                  final cat = categoryIdMap[categoryId];
+                                  if (cat != null &&
+                                      cat['name'] != null &&
+                                      cat['name'].toString().trim().isNotEmpty) {
+                                    categoryName = cat['name'].toString();
+                                  }
                                 }
-                              }
 
-                              final bool isCategorySelected =
-                                  _selectedCategoryId != null &&
-                                  categoryId != null &&
-                                  _selectedCategoryId == categoryId;
+                                final bool isCategorySelected =
+                                    _selectedCategoryId != null &&
+                                    categoryId != null &&
+                                    _selectedCategoryId == categoryId;
 
-                              return DataRow(
-                                cells: [
-                                  DataCell(
-                                    TextButton(
-                                      child: Text('${item['id'] ?? '-'}'),
-                                      onPressed: () =>
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  ItemsDetailPage(item: item),
+                                return DataRow(
+                                  color: isCategorySelected
+                                      ? MaterialStateProperty.all<Color>(
+                                          Theme.of(context).colorScheme.primary.withOpacity(0.12))
+                                      : null,
+                                  cells: [
+                                    DataCell(
+                                      TextButton(
+                                        child: Text('${item['id'] ?? '-'}'),
+                                        onPressed: () =>
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ItemsDetailPage(item: item),
+                                              ),
                                             ),
-                                          ),
+                                      ),
                                     ),
-                                  ),
-                                  DataCell(Text('${item['name'] ?? '-'}')),
-                                  DataCell(
-                                    TextButton(
-                                      child: Text('${categoryName ?? '-'}'),
-                                      onPressed: () {
-                                        setState(() {
-                                          _selectedCategoryId = categoryId;
-                                        });
-                                        if (categoryId != null) {
-                                          Navigator.of(context)
-                                              .push(
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      CategoriesDetailPage(
-                                                        categoryId: categoryId,
-                                                      ),
-                                                ),
-                                              )
-                                              .then((_) {
-                                                // 戻った時に選択解除
-                                                setState(() {
-                                                  _selectedCategoryId = null;
+                                    DataCell(Text('${item['name'] ?? '-'}')),
+                                    DataCell(
+                                      TextButton(
+                                        child: Text('${categoryName ?? '-'}'),
+                                        onPressed: () {
+                                          setState(() {
+                                            _selectedCategoryId = categoryId;
+                                          });
+                                          if (categoryId != null) {
+                                            Navigator.of(context)
+                                                .push(
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        CategoriesDetailPage(
+                                                          categoryId: categoryId,
+                                                        ),
+                                                  ),
+                                                )
+                                                .then((_) {
+                                                  // 戻った時に選択解除
+                                                  setState(() {
+                                                    _selectedCategoryId = null;
+                                                  });
                                                 });
-                                              });
-                                        }
-                                      },
+                                          }
+                                        },
+                                      ),
                                     ),
-                                  ),
-
-                                  DataCell(
-                                    Text(
-                                      item['price'] != null
-                                          ? '¥${item['price']}'
-                                          : '-',
+                                    DataCell(
+                                      Text(
+                                        item['price'] != null
+                                            ? '¥${_formatNumber(item['price'])}'
+                                            : '-',
+                                      ),
                                     ),
-                                  ),
-                                  DataCell(
-                                    Text(
-                                      item['quantity'] != null
-                                          ? '${item['quantity']}'
-                                          : '-',
+                                    DataCell(
+                                      Text(
+                                        item['quantity'] != null
+                                            ? _formatNumber(item['quantity'])
+                                            : '-',
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              );
-                            }).toList(),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
                           ),
                         ),
                       );

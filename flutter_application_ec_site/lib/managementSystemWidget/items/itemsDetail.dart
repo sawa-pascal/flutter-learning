@@ -3,11 +3,24 @@ import 'package:flutter_application_ec_site/managementSystemWidget/categories/ca
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../myApiProvider.dart';
 import 'itemsEdit.dart';
+import 'package:intl/intl.dart';
 
 class ItemsDetailPage extends ConsumerWidget {
   final Map<String, dynamic> item;
 
   const ItemsDetailPage({Key? key, required this.item}) : super(key: key);
+
+  String _formatNumber(dynamic value) {
+    if (value == null) return '';
+    final formatter = NumberFormat("#,###");
+    if (value is num) return formatter.format(value);
+    if (value is String) {
+      final parsed = num.tryParse(value);
+      if (parsed != null) return formatter.format(parsed);
+      return value;
+    }
+    return value.toString();
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -59,7 +72,7 @@ class ItemsDetailPage extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 24),
-                          _row('ID', item['id']?.toString() ?? ''),
+                          _row('ID', _formatNumber(item['id'])),
                           const SizedBox(height: 14),
                           _row('名前', item['name']?.toString() ?? ''),
                           const SizedBox(height: 14),
@@ -119,10 +132,10 @@ class ItemsDetailPage extends ConsumerWidget {
                           const SizedBox(height: 14),
                           _row(
                             '価格',
-                            item['price'] != null ? '¥${item['price']}' : '',
+                            item['price'] != null ? '¥${_formatNumber(item['price'])}' : '',
                           ),
                           const SizedBox(height: 14),
-                          _row('在庫', item['quantity']?.toString() ?? ''),
+                          _row('在庫', _formatNumber(item['quantity'])),
                           const SizedBox(height: 20),
                           if (description.isNotEmpty)
                             Column(
