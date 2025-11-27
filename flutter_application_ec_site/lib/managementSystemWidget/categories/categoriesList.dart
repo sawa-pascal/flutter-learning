@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_ec_site/managementSystemWidget/categories/categoriesCreator.dart';
+import 'package:flutter_application_ec_site/managementSystemWidget/categories/categoriesDetail.dart';
 import 'package:flutter_application_ec_site/myHomePage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../myApiProvider.dart';
@@ -148,7 +149,20 @@ class _CategoriesListPageState extends ConsumerState<CategoriesListPage> {
                         rows: paged.map<DataRow>((category) {
                           return DataRow(
                             cells: [
-                              DataCell(Text('${category['id'] ?? '-'}')),
+                              //DataCell(Text('${category['id'] ?? '-'}')),
+                              DataCell(
+                                TextButton(
+                                  child: Text('${category['id'] ?? '-'}'),
+                                  onPressed: () => Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          CategoriesDetailPage(
+                                            category: category,
+                                          ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                               DataCell(Text('${category['name'] ?? '-'}')),
                               DataCell(
                                 Text('${category['display_order'] ?? '-'}'),
