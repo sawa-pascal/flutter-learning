@@ -967,6 +967,131 @@ final class PurchaseHistoryFamily extends $Family
   String toString() => r'purchaseHistoryProvider';
 }
 
+@ProviderFor(salesList)
+const salesListProvider = SalesListProvider._();
+
+final class SalesListProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Map<String, dynamic>>,
+          Map<String, dynamic>,
+          FutureOr<Map<String, dynamic>>
+        >
+    with
+        $FutureModifier<Map<String, dynamic>>,
+        $FutureProvider<Map<String, dynamic>> {
+  const SalesListProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'salesListProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$salesListHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<Map<String, dynamic>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Map<String, dynamic>> create(Ref ref) {
+    return salesList(ref);
+  }
+}
+
+String _$salesListHash() => r'435cda83a447ef06b726e9ba51ef77fb30f40f4c';
+
+/// 注文詳細アイテム一覧取得
+
+@ProviderFor(saleItems)
+const saleItemsProvider = SaleItemsFamily._();
+
+/// 注文詳細アイテム一覧取得
+
+final class SaleItemsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<dynamic>>,
+          List<dynamic>,
+          FutureOr<List<dynamic>>
+        >
+    with $FutureModifier<List<dynamic>>, $FutureProvider<List<dynamic>> {
+  /// 注文詳細アイテム一覧取得
+  const SaleItemsProvider._({
+    required SaleItemsFamily super.from,
+    required int super.argument,
+  }) : super(
+         retry: null,
+         name: r'saleItemsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$saleItemsHash();
+
+  @override
+  String toString() {
+    return r'saleItemsProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<List<dynamic>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<dynamic>> create(Ref ref) {
+    final argument = this.argument as int;
+    return saleItems(ref, saleId: argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is SaleItemsProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$saleItemsHash() => r'8f004b7f5b02e41b9c2a7c8efff229340fdee8c1';
+
+/// 注文詳細アイテム一覧取得
+
+final class SaleItemsFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<List<dynamic>>, int> {
+  const SaleItemsFamily._()
+    : super(
+        retry: null,
+        name: r'saleItemsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// 注文詳細アイテム一覧取得
+
+  SaleItemsProvider call({required int saleId}) =>
+      SaleItemsProvider._(argument: saleId, from: this);
+
+  @override
+  String toString() => r'saleItemsProvider';
+}
+
 @ProviderFor(usersList)
 const usersListProvider = UsersListFamily._();
 
@@ -1341,7 +1466,7 @@ final class DeleteUserProvider
   }
 }
 
-String _$deleteUserHash() => r'edc1cb6e9a60fa0831fb95475c342717691071ff';
+String _$deleteUserHash() => r'd15f1602a9f082d73194b82296ad6a088729a555';
 
 final class DeleteUserFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<dynamic>, int> {

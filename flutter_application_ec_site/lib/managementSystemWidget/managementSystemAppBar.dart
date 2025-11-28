@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_ec_site/managementSystemWidget/categories/categoriesList.dart';
 import 'package:flutter_application_ec_site/managementSystemWidget/items/itemsList.dart';
+import 'package:flutter_application_ec_site/managementSystemWidget/sales/salesList.dart';
 import 'package:flutter_application_ec_site/managementSystemWidget/users/usersList.dart';
 import 'package:flutter_application_ec_site/myHomePage.dart';
 
@@ -58,8 +59,9 @@ class ManagementSystemDrawer extends StatelessWidget {
               leading: const Icon(Icons.bar_chart),
               title: const Text('売上管理'),
               onTap: () {
-                Navigator.of(context).pop(); // Drawer を閉じる
-                // do nothing, as it's usually the default page
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => SalesListPage()),
+                );
               },
             ),
 
