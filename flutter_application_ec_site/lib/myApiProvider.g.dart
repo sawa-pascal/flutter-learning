@@ -967,14 +967,91 @@ final class PurchaseHistoryFamily extends $Family
   String toString() => r'purchaseHistoryProvider';
 }
 
-@ProviderFor(usersSignup)
-const usersSignupProvider = UsersSignupFamily._();
+@ProviderFor(usersList)
+const usersListProvider = UsersListFamily._();
 
-final class UsersSignupProvider
+final class UsersListProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Map<String, dynamic>>,
+          Map<String, dynamic>,
+          FutureOr<Map<String, dynamic>>
+        >
+    with
+        $FutureModifier<Map<String, dynamic>>,
+        $FutureProvider<Map<String, dynamic>> {
+  const UsersListProvider._({
+    required UsersListFamily super.from,
+    required int? super.argument,
+  }) : super(
+         retry: null,
+         name: r'usersListProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$usersListHash();
+
+  @override
+  String toString() {
+    return r'usersListProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<Map<String, dynamic>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Map<String, dynamic>> create(Ref ref) {
+    final argument = this.argument as int?;
+    return usersList(ref, id: argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is UsersListProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$usersListHash() => r'f410d1da5fe0a7f59a2566a99b9e31e30fe861bc';
+
+final class UsersListFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<Map<String, dynamic>>, int?> {
+  const UsersListFamily._()
+    : super(
+        retry: null,
+        name: r'usersListProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  UsersListProvider call({int? id}) =>
+      UsersListProvider._(argument: id, from: this);
+
+  @override
+  String toString() => r'usersListProvider';
+}
+
+@ProviderFor(createUsers)
+const createUsersProvider = CreateUsersFamily._();
+
+final class CreateUsersProvider
     extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
     with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
-  const UsersSignupProvider._({
-    required UsersSignupFamily super.from,
+  const CreateUsersProvider._({
+    required CreateUsersFamily super.from,
     required ({
       String name,
       String email,
@@ -986,18 +1063,18 @@ final class UsersSignupProvider
     super.argument,
   }) : super(
          retry: null,
-         name: r'usersSignupProvider',
+         name: r'createUsersProvider',
          isAutoDispose: true,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
 
   @override
-  String debugGetCreateSourceHash() => _$usersSignupHash();
+  String debugGetCreateSourceHash() => _$createUsersHash();
 
   @override
   String toString() {
-    return r'usersSignupProvider'
+    return r'createUsersProvider'
         ''
         '$argument';
   }
@@ -1019,7 +1096,7 @@ final class UsersSignupProvider
               int prefecture_id,
               String address,
             });
-    return usersSignup(
+    return createUsers(
       ref,
       name: argument.name,
       email: argument.email,
@@ -1032,7 +1109,7 @@ final class UsersSignupProvider
 
   @override
   bool operator ==(Object other) {
-    return other is UsersSignupProvider && other.argument == argument;
+    return other is CreateUsersProvider && other.argument == argument;
   }
 
   @override
@@ -1041,9 +1118,9 @@ final class UsersSignupProvider
   }
 }
 
-String _$usersSignupHash() => r'542688fef4a019100600da3de0754ca681b8c566';
+String _$createUsersHash() => r'14f20a488b120fd614dc847f98a9ee3f0478bb85';
 
-final class UsersSignupFamily extends $Family
+final class CreateUsersFamily extends $Family
     with
         $FunctionalFamilyOverride<
           FutureOr<dynamic>,
@@ -1056,23 +1133,23 @@ final class UsersSignupFamily extends $Family
             String address,
           })
         > {
-  const UsersSignupFamily._()
+  const CreateUsersFamily._()
     : super(
         retry: null,
-        name: r'usersSignupProvider',
+        name: r'createUsersProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
 
-  UsersSignupProvider call({
+  CreateUsersProvider call({
     required String name,
     required String email,
     required String hashed_password,
     required String tel,
     required int prefecture_id,
     required String address,
-  }) => UsersSignupProvider._(
+  }) => CreateUsersProvider._(
     argument: (
       name: name,
       email: email,
@@ -1085,7 +1162,7 @@ final class UsersSignupFamily extends $Family
   );
 
   @override
-  String toString() => r'usersSignupProvider';
+  String toString() => r'createUsersProvider';
 }
 
 @ProviderFor(updateUser)
@@ -1213,6 +1290,75 @@ final class UpdateUserFamily extends $Family
 
   @override
   String toString() => r'updateUserProvider';
+}
+
+@ProviderFor(deleteUser)
+const deleteUserProvider = DeleteUserFamily._();
+
+final class DeleteUserProvider
+    extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
+    with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+  const DeleteUserProvider._({
+    required DeleteUserFamily super.from,
+    required int super.argument,
+  }) : super(
+         retry: null,
+         name: r'deleteUserProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$deleteUserHash();
+
+  @override
+  String toString() {
+    return r'deleteUserProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<dynamic> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<dynamic> create(Ref ref) {
+    final argument = this.argument as int;
+    return deleteUser(ref, id: argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is DeleteUserProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$deleteUserHash() => r'edc1cb6e9a60fa0831fb95475c342717691071ff';
+
+final class DeleteUserFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<dynamic>, int> {
+  const DeleteUserFamily._()
+    : super(
+        retry: null,
+        name: r'deleteUserProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  DeleteUserProvider call({required int id}) =>
+      DeleteUserProvider._(argument: id, from: this);
+
+  @override
+  String toString() => r'deleteUserProvider';
 }
 
 @ProviderFor(changePassword)
