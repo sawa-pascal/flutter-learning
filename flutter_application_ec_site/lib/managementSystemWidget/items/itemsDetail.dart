@@ -99,19 +99,24 @@ class ItemsDetailPage extends ConsumerWidget {
                                         setState(() => isPressed = false);
                                         Navigator.of(context).push(
                                           MaterialPageRoute(
-                                            builder: (context) => CategoriesDetailPage(
-                                              categoryId: item['category_id'],
-                                            ),
+                                            builder: (context) =>
+                                                CategoriesDetailPage(
+                                                  categoryId:
+                                                      item['category_id'],
+                                                ),
                                           ),
                                         );
                                       },
-                                      onHighlightChanged: (v) => setState(() => isPressed = v),
+                                      onHighlightChanged: (v) =>
+                                          setState(() => isPressed = v),
                                       child: Container(
                                         decoration: BoxDecoration(
                                           color: isPressed
                                               ? Colors.blue.withOpacity(0.18)
                                               : Colors.blue.withOpacity(0),
-                                          borderRadius: BorderRadius.circular(6),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
                                         ),
                                         child: Text(
                                           categoryName,
@@ -132,7 +137,9 @@ class ItemsDetailPage extends ConsumerWidget {
                           const SizedBox(height: 14),
                           _row(
                             '価格',
-                            item['price'] != null ? '¥${_formatNumber(item['price'])}' : '',
+                            item['price'] != null
+                                ? '¥${_formatNumber(item['price'])}'
+                                : '',
                           ),
                           const SizedBox(height: 14),
                           _row('在庫', _formatNumber(item['quantity'])),
@@ -295,7 +302,7 @@ class ItemsDetailPage extends ConsumerWidget {
                           const SizedBox(height: 32),
                           ElevatedButton.icon(
                             icon: const Icon(Icons.arrow_back),
-                            label: const Text('一覧に戻る'),
+                            label: const Text('戻る'),
                             onPressed: () {
                               Navigator.of(context).pop();
                             },

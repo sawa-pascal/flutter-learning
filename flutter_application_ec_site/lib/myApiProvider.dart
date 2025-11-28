@@ -328,6 +328,7 @@ Future<List<dynamic>> saleItems(Ref ref, {required int saleId}) async {
       body: jsonEncode({'sale_id': saleId}),
     ),
     onSuccess: (json) => json is List ? json : [],
+    key: 'sale_items'
   );
 }
 

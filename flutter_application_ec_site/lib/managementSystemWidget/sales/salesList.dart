@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_ec_site/managementSystemWidget/sales/salesDetail.dart';
 import 'package:flutter_application_ec_site/managementSystemWidget/users/usersDetail.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../myApiProvider.dart';
@@ -211,7 +212,9 @@ class _SalesListPageState extends ConsumerState<SalesListPage> {
         final filtered = _filterSales(
           salesRaw,
           userName: _selectedUserName,
-          startString: _startDate != null ? justDateFormat.format(_startDate!) : '',
+          startString: _startDate != null
+              ? justDateFormat.format(_startDate!)
+              : '',
           endString: _endDate != null ? justDateFormat.format(_endDate!) : '',
         );
 
@@ -340,7 +343,20 @@ class _SalesListPageState extends ConsumerState<SalesListPage> {
           for (final sale in paged)
             DataRow(
               cells: [
-                DataCell(Text('${sale['id'] ?? ''}')),
+                DataCell(
+                  TextButton(
+                    child: Text('${sale['id'] ?? ''}'),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => SalesDetailPage(
+                          saleId: sale['id'] is int
+                              ? sale['id']
+                              : int.tryParse('${sale['id']}') ?? 0,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
                 DataCell(Text(_formatDateTime(sale['date']))),
                 DataCell(
                   TextButton(
@@ -421,9 +437,7 @@ class _SalesListPageState extends ConsumerState<SalesListPage> {
                 isDense: true,
               ),
               child: Text(
-                pickedDate != null
-                    ? formatJapaneseDate(pickedDate)
-                    : '',
+                pickedDate != null ? formatJapaneseDate(pickedDate) : '',
               ),
             ),
           ),
