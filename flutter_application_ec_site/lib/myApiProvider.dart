@@ -12,10 +12,10 @@ part 'myApiProvider.g.dart';
 // ============================================================================
 
 /// APIサーバーのベースURL（プロトコルなし）
-const String apiBaseUrl = '3.25.105.3';
+const String apiBaseUrl = '3.26.165.82';
 
 /// 画像リソースのベースURL
-const String imageBaseUrl = 'http://3.25.105.3/images/';
+const String imageBaseUrl = 'http://3.26.165.82/images/';
 
 /// HTTPステータスコード: 成功
 const int httpStatusCodeSuccess = 200;
@@ -388,7 +388,7 @@ Future<dynamic> updateUser(
 Future<dynamic> deleteUser(Ref ref, {required int id}) async {
   return _handleRequest<dynamic>(
     request: () => http.Client().post(
-      Uri.http(apiBaseUrl, '/api/users/delete_user.php'),
+      Uri.http(apiBaseUrl, '/api/users/delete_users.php'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'id': id}),
     ),
