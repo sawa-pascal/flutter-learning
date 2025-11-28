@@ -176,7 +176,7 @@ class _CategoriesDetailPageState extends ConsumerState<CategoriesDetailPage> {
                       const SizedBox(height: 32),
                       ElevatedButton.icon(
                         icon: const Icon(Icons.arrow_back),
-                        label: const Text('一覧に戻る'),
+                        label: const Text('戻る'),
                         onPressed: () {
                           Navigator.of(context).pop();
                         },

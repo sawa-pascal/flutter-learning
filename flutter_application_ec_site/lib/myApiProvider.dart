@@ -307,6 +307,31 @@ Future<List<dynamic>> purchaseHistory(Ref ref, int user_id) async {
   );
 }
 
+@riverpod
+Future<Map<String, dynamic>> salesList(Ref ref) async {
+  return _handleRequest<Map<String, dynamic>>(
+    request: () => http.Client().get(
+      Uri.http(apiBaseUrl, '/api/sales/get_sales_list.php'),
+      headers: {'Content-Type': 'application/json'},
+    ),
+    onSuccess: (json) => json is Map<String, dynamic> ? json : {},
+  );
+}
+
+/// 注文詳細アイテム一覧取得
+@riverpod
+Future<List<dynamic>> saleItems(Ref ref, {required int saleId}) async {
+  return _handleRequest<List<dynamic>>(
+    request: () => http.Client().post(
+      Uri.http(apiBaseUrl, '/api/sales/get_sale_items.php'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'sale_id': saleId}),
+    ),
+    onSuccess: (json) => json is List ? json : [],
+    key: 'sale_items'
+  );
+}
+
 // ========= /api/users/ =========
 
 // ユーザー一覧取得
